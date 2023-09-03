@@ -7,6 +7,8 @@ import {
   i32ToBytes,
   stringToBytes,
   bytesToI32,
+  u64ToBytes,
+  bytesToU64,
 } from '@massalabs/as-types';
 import {
   Address,
@@ -21,11 +23,11 @@ import { PersistentMap } from '../libraries/PersistentMap';
 
 // STORAGE
 
-const OWNERS = stringToBytes('owners');
-const IS_OWNER = new PersistentMap<string, bool>('is_owner');
-const REQUIRED = stringToBytes('required');
-const TRANSACTIONS = new PersistentMap<u64, Transaction>('transactions');
-const APPROVED = new PersistentMap<string, bool>('approved'); // @dev key is a combination of transaction id and owner address
+export const OWNERS = stringToBytes('owners');
+export const IS_OWNER = new PersistentMap<string, bool>('is_owner');
+export const REQUIRED = stringToBytes('required');
+export const TRANSACTIONS = new PersistentMap<u64, Transaction>('transactions');
+export const APPROVED = new PersistentMap<string, bool>('approved'); // @dev key is a combination of transaction id and owner address
 
 // STRUCT
 
@@ -65,8 +67,14 @@ export class IMultisig {
     call(this._origin, 'constructor', new Args().add(owners).add(required), 0);
   }
 
-  submit(to: string, value: u64, data: StaticArray<u8>): void {
-    call(this._origin, 'submit', new Args().add(to).add(value).add(data), 0);
+  submit(to: string, value: u64, data: StaticArray<u8>): u64 {
+    const res = call(
+      this._origin,
+      'submit',
+      new Args().add(to).add(value).add(data),
+      0,
+    );
+    return bytesToU64(res);
   }
 
   approve(txId: u64): void {
@@ -79,6 +87,14 @@ export class IMultisig {
 
   revoke(txId: u64): void {
     call(this._origin, 'revoke', new Args().add(txId), 0);
+  }
+
+  addOwner(owner: string): void {
+    call(this._origin, 'addOwner', new Args().add(owner), 0);
+  }
+
+  removeOwner(owner: string): void {
+    call(this._origin, 'removeOwner', new Args().add(owner), 0);
   }
 }
 
@@ -107,7 +123,7 @@ export function receive(_: StaticArray<u8>): void {
   generateEvent(event);
 }
 
-export function submit(bs: StaticArray<u8>): void {
+export function submit(bs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(bs);
   const to = new Address(args.nextString().unwrap());
   const value = args.nextU64().unwrap();
@@ -124,6 +140,8 @@ export function submit(bs: StaticArray<u8>): void {
     data.toString(),
   ]);
   generateEvent(event);
+
+  return u64ToBytes(id);
 }
 
 export function approve(bs: StaticArray<u8>): void {
