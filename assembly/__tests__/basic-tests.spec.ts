@@ -6,21 +6,31 @@ import {
   fixedSizeArrayToBytes,
   u64ToBytes,
 } from '@massalabs/as-types';
-import { IS_OWNER, OWNERS, REQUIRED } from '../storage/Multisig';
+import { APPROVED, IS_OWNER, OWNERS, REQUIRED } from '../storage/Multisig';
 import {
   Address,
   Context,
   Storage,
+  balance,
+  balanceOf,
   changeCallStack,
   generateEvent,
   mockAdminContext,
   mockScCall,
   resetStorage,
 } from '@massalabs/massa-as-sdk';
+import { approve, execute, submit } from '../contracts/Multisig';
+import { Transaction } from '../structs/Transaction';
+import {
+  _notApproved,
+  buildApprovalKey,
+  getApprovalCount,
+} from '../contracts/utils';
 
 const user1 = generateDumbAddress();
 const user2 = generateDumbAddress();
 const user3 = generateDumbAddress();
+const user4 = generateDumbAddress();
 const owners = [user1, user2, user3];
 
 describe('Multisig', () => {
@@ -44,14 +54,65 @@ describe('Multisig', () => {
     const _required = bytesToI32(Storage.get(REQUIRED));
     expect(_required).toBe(2);
 
-    const isOwner = IS_OWNER.get(user1, false);
-    expect(isOwner).toBe(true);
+    const isOwner1 = IS_OWNER.get(user1, false);
+    expect(isOwner1).toBe(true);
+    const isOwner2 = IS_OWNER.get(user2, false);
+    expect(isOwner2).toBe(true);
+    const isOwner3 = IS_OWNER.get(user3, false);
+    expect(isOwner3).toBe(true);
+  });
+  it('should be able to submit', () => {
+    const id = _submit();
+
+    expect(id).toBe(0);
+  });
+  it('should able to approve', () => {
+    const id = _submit();
+    _approve(user1, id);
+
+    expect(getApprovalCount(id)).toBe(1);
+    const key = buildApprovalKey(id, new Address(user1));
+    expect(APPROVED.get(key, false)).toBe(true);
+  });
+  it('should not be able to execute while required threshold is not met', () => {
+    throws('approval threshold not met', () => {
+      const id = _submit();
+      _approve(user1, id);
+      _execute(id);
+    });
+  });
+  it('should be able to execute when required threshold is met', () => {
+    expect(balanceOf(user4)).toBe(0);
+    const id = _submit();
+    _approve(user1, id);
+    _approve(user2, id);
+    _execute(id);
+    expect(balanceOf(user4)).toBe(1);
   });
 });
 
 // ==================================================== //
 // ====                 HELPERS                    ==== //
 // ==================================================== //
+
+const _submit = (): u64 => {
+  setCaller(user1);
+  const args = new Args().add(new Transaction(new Address(user4), 1, []));
+  const id = submit(args.serialize());
+  return bytesToU64(id);
+};
+
+const _approve = (caller: string, id: u64): void => {
+  setCaller(caller);
+  const args = new Args().add(id);
+  approve(args.serialize());
+};
+
+const _execute = (id: u64): void => {
+  setCaller(user1);
+  const args = new Args().add(id);
+  execute(args.serialize());
+};
 
 function getCallStack(): string[] {
   return Context.addressStack().map<string>((a) => a.toString());
@@ -60,7 +121,7 @@ function getCallStack(): string[] {
 function setCaller(address: string): void {
   const currentStack = getCallStack();
   currentStack[0] = address;
-  changeCallStack(currentStack.join(','));
+  changeCallStack(currentStack.join(' , '));
 }
 
 function printCallStack(): void {
@@ -82,5 +143,5 @@ function mixRandomChars(length: i32): string {
 }
 
 function generateDumbAddress(): string {
-  return 'A12' + mixRandomChars(47);
+  return 'AU12' + mixRandomChars(47);
 }
