@@ -34,16 +34,14 @@ import {
 import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
 
 export function constructor(bs: StaticArray<u8>): void {
-  generateEvent('constructor');
-  generateEvent(
-    '🚀 ~ file: Multisig.ts:106 ~ constructor ~ isDeployingContract:' +
-      Context.isDeployingContract().toString(),
-  );
   assert(Context.isDeployingContract(), 'already deployed');
 
   const args = new Args(bs);
-  const owners = args.nextFixedSizeArray<string>().unwrap();
   const required = args.nextI32().unwrap();
+  const owners: string[] = args.nextStringArray().unwrap();
+  generateEvent(
+    '🚀 ~ file: Multisig.ts:41 ~ constructor ~ owners:' + owners.toString(),
+  );
   assert(owners.length > 0, 'owners required');
   assert(required > 0 && required <= owners.length, 'invalid required');
 
