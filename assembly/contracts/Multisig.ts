@@ -20,87 +20,25 @@ import {
   transferCoins,
 } from '@massalabs/massa-as-sdk';
 import { PersistentMap } from '../libraries/PersistentMap';
-
-// STORAGE
-
-export const OWNERS = stringToBytes('owners');
-export const IS_OWNER = new PersistentMap<string, bool>('is_owner');
-export const REQUIRED = stringToBytes('required');
-export const TRANSACTIONS = new PersistentMap<u64, Transaction>('transactions');
-export const APPROVED = new PersistentMap<string, bool>('approved'); // @dev key is a combination of transaction id and owner address
-
-// STRUCT
-
-class Transaction implements Serializable {
-  constructor(
-    public to: Address = new Address(''),
-    public value: u64 = 0,
-    public data: StaticArray<u8> = [],
-    public executed: bool = false,
-  ) {}
-
-  serialize(): StaticArray<u8> {
-    return new Args()
-      .add(this.to)
-      .add(this.value)
-      .add(this.data)
-      .add(this.executed)
-      .serialize();
-  }
-
-  deserialize(data: StaticArray<u8>, offset: i32): Result<i32> {
-    const args = new Args(data, offset);
-    this.to = new Address(args.nextString().unwrap());
-    this.value = args.nextU64().unwrap();
-    this.data = args.nextBytes().unwrap();
-    this.executed = args.nextBool().unwrap();
-    return new Result(args.offset);
-  }
-}
-
-// INTERFACE
-
-export class IMultisig {
-  constructor(public _origin: Address) {}
-
-  init(owners: string[], required: i32): void {
-    call(this._origin, 'constructor', new Args().add(owners).add(required), 0);
-  }
-
-  submit(to: string, value: u64, data: StaticArray<u8>): u64 {
-    const res = call(
-      this._origin,
-      'submit',
-      new Args().add(to).add(value).add(data),
-      0,
-    );
-    return bytesToU64(res);
-  }
-
-  approve(txId: u64): void {
-    call(this._origin, 'approve', new Args().add(txId), 0);
-  }
-
-  execute(txId: u64): void {
-    call(this._origin, 'execute', new Args().add(txId), 0);
-  }
-
-  revoke(txId: u64): void {
-    call(this._origin, 'revoke', new Args().add(txId), 0);
-  }
-
-  addOwner(owner: string): void {
-    call(this._origin, 'addOwner', new Args().add(owner), 0);
-  }
-
-  removeOwner(owner: string): void {
-    call(this._origin, 'removeOwner', new Args().add(owner), 0);
-  }
-}
-
-// ENDPOINTS
+import {
+  _notApproved,
+  _notExecuted,
+  _onlyOwner,
+  _txExists,
+  addOwner,
+  addTransaction,
+  buildApprovalKey,
+  getApprovalCount,
+  required,
+} from './utils';
+import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
 
 export function constructor(bs: StaticArray<u8>): void {
+  generateEvent('constructor');
+  generateEvent(
+    '🚀 ~ file: Multisig.ts:106 ~ constructor ~ isDeployingContract:' +
+      Context.isDeployingContract().toString(),
+  );
   assert(Context.isDeployingContract(), 'already deployed');
 
   const args = new Args(bs);
@@ -201,86 +139,4 @@ export function revoke(bs: StaticArray<u8>): void {
     txId.toString(),
   ]);
   generateEvent(event);
-}
-
-// MODIFIERS
-
-function _onlyOwner(): void {
-  assert(IS_OWNER.contains(Context.caller().toString()), 'not owner');
-}
-
-function _txExists(txId: u64): void {
-  assert(TRANSACTIONS.contains(txId), 'tx does not exist');
-}
-
-function _notApproved(txId: u64): void {
-  const key = buildApprovalKey(txId, Context.caller());
-  assert(
-    !APPROVED.contains(key) || !APPROVED.getSome(key),
-    'tx already approved',
-  );
-}
-
-function _notExecuted(txId: u64): void {
-  assert(!TRANSACTIONS.getSome(txId).executed, 'tx already executed');
-}
-
-// GETTERS
-
-function getApprovalCount(txId: u64): i32 {
-  let count = 0;
-  for (let i = 0; i < owners().length; i++) {
-    if (APPROVED.contains(buildApprovalKey(txId, new Address(owners()[i])))) {
-      count++;
-    }
-  }
-  return count;
-}
-
-function owners(): string[] {
-  return Storage.has(OWNERS)
-    ? bytesToFixedSizeArray<string>(Storage.get(OWNERS))
-    : [];
-}
-
-function required(): i32 {
-  return bytesToI32(Storage.get(REQUIRED));
-}
-
-// HELPERS
-
-function buildApprovalKey(txId: u64, owner: Address): string {
-  return txId.toString() + owner.toString();
-}
-
-function addTransaction(to: Address, value: u64, data: StaticArray<u8>): u64 {
-  const transaction = new Transaction(to, value, data, false);
-  const id = TRANSACTIONS.size();
-  TRANSACTIONS.set(id, transaction);
-  return id;
-}
-
-function addOwner(owner: string): void {
-  assert(!IS_OWNER.contains(owner), 'already owner');
-
-  IS_OWNER.set(owner, true);
-
-  const _owners = owners();
-  _owners.push(owner);
-  setOwners(_owners);
-}
-
-function removeOwner(owner: string): void {
-  assert(IS_OWNER.contains(owner), 'not owner');
-
-  IS_OWNER.delete(owner);
-
-  const _owners = owners();
-  const index = _owners.indexOf(owner);
-  _owners.splice(index, 1);
-  setOwners(_owners);
-}
-
-function setOwners(owners: string[]): void {
-  Storage.set(OWNERS, fixedSizeArrayToBytes(owners));
 }
