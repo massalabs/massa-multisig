@@ -61,13 +61,24 @@ describe('Multisig', () => {
     const isOwner3 = IS_OWNER.get(user3, false);
     expect(isOwner3).toBe(true);
   });
-  it('should be able to submit', () => {
-    const id = _submit();
 
+  it('should not be able to submit when caller isnt owner', () => {
+    throws('only owners can submit', () => {
+      const id = _submit(user4);
+    });
+  });
+  it('should be able to submit when caller is owner', () => {
+    const id = _submit(user1);
     expect(id).toBe(0);
   });
-  it('should able to approve', () => {
-    const id = _submit();
+  it('should not be able to approve when caller isnt owner', () => {
+    throws('only owners can approve', () => {
+      const id = _submit(user1);
+      _approve(user4, id);
+    });
+  });
+  it('should be able to approve when caller is owner', () => {
+    const id = _submit(user1);
     _approve(user1, id);
 
     expect(getApprovalCount(id)).toBe(1);
@@ -76,17 +87,28 @@ describe('Multisig', () => {
   });
   it('should not be able to execute while required threshold is not met', () => {
     throws('approval threshold not met', () => {
-      const id = _submit();
+      const id = _submit(user1);
       _approve(user1, id);
-      _execute(id);
+      _execute(user1, id);
+    });
+  });
+  it('should not be able to execute when caller does not belong to owners', () => {
+    throws('only owners can execute', () => {
+      const id = _submit(user1);
+      _approve(user1, id);
+      _approve(user2, id);
+      _execute(user4, id);
     });
   });
   it('should be able to execute when required threshold is met', () => {
-    expect(balanceOf(user4)).toBe(0);
-    const id = _submit();
+    // expect(balanceOf(user1)).toBe(0);
+    // expect(balanceOf(user2)).toBe(0);
+    // expect(balanceOf(user3)).toBe(0);
+    // expect(balanceOf(user4)).toBe(0);
+    const id = _submit(user1);
     _approve(user1, id);
     _approve(user2, id);
-    _execute(id);
+    _execute(user3, id);
     expect(balanceOf(user4)).toBe(1);
   });
 });
@@ -95,8 +117,8 @@ describe('Multisig', () => {
 // ====                 HELPERS                    ==== //
 // ==================================================== //
 
-const _submit = (): u64 => {
-  setCaller(user1);
+const _submit = (caller: string): u64 => {
+  setCaller(caller);
   const args = new Args().add(new Transaction(new Address(user4), 1, []));
   const id = submit(args.serialize());
   return bytesToU64(id);
@@ -108,8 +130,8 @@ const _approve = (caller: string, id: u64): void => {
   approve(args.serialize());
 };
 
-const _execute = (id: u64): void => {
-  setCaller(user1);
+const _execute = (caller: string, id: u64): void => {
+  setCaller(caller);
   const args = new Args().add(id);
   execute(args.serialize());
 };
