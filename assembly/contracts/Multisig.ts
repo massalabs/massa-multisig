@@ -9,6 +9,7 @@ import {
   bytesToI32,
   u64ToBytes,
   bytesToU64,
+  serializableObjectsArrayToBytes,
 } from '@massalabs/as-types';
 import {
   Address,
@@ -32,6 +33,7 @@ import {
   required,
 } from './utils';
 import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
+import { Transaction } from '../structs/Transaction';
 
 export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
@@ -39,9 +41,6 @@ export function constructor(bs: StaticArray<u8>): void {
   const args = new Args(bs);
   const required = args.nextI32().unwrap();
   const owners: string[] = args.nextStringArray().unwrap();
-  generateEvent(
-    '🚀 ~ file: Multisig.ts:41 ~ constructor ~ owners:' + owners.toString(),
-  );
   assert(owners.length > 0, 'owners required');
   assert(required > 0 && required <= owners.length, 'invalid required');
 
@@ -137,4 +136,21 @@ export function revoke(bs: StaticArray<u8>): void {
     txId.toString(),
   ]);
   generateEvent(event);
+}
+
+// ======================================
+// ============  VIEW  ==================
+// ======================================
+
+class GetTransactionsReturn extends Transaction {}
+
+export function getTransactions(_: StaticArray<u8>): StaticArray<u8> {
+  const txs: Transaction[] = [];
+
+  for (let i: usize = 0; i < TRANSACTIONS.size(); i++) {
+    const tx = TRANSACTIONS.getSome(i);
+    txs.push(tx);
+  }
+
+  return serializableObjectsArrayToBytes(txs);
 }

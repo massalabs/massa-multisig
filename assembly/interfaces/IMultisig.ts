@@ -1,4 +1,4 @@
-import { Args, bytesToU64 } from '@massalabs/as-types';
+import { Args, NoArg, bytesToU64 } from '@massalabs/as-types';
 import { Address, call } from '@massalabs/massa-as-sdk';
 
 export class IMultisig {
@@ -16,6 +16,10 @@ export class IMultisig {
       0,
     );
     return bytesToU64(res);
+  }
+
+  receive(value: u64): void {
+    call(this._origin, 'receive', NoArg, value);
   }
 
   approve(txId: u64): void {

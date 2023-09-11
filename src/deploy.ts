@@ -39,7 +39,7 @@ const required = 2;
     [
       {
         data: readFileSync(path.join(__dirname, 'build', 'Multisig.wasm')),
-        coins: BigInt(15) * MassaUnits.oneMassa,
+        coins: BigInt(1) * MassaUnits.oneMassa,
         args: new Args().addI32(required).addArray(owners, ArrayTypes.STRING),
       },
     ],
