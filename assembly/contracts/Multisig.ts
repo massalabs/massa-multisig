@@ -1,15 +1,8 @@
 import {
   Args,
-  Result,
-  Serializable,
-  bytesToFixedSizeArray,
-  fixedSizeArrayToBytes,
-  i32ToBytes,
-  stringToBytes,
-  bytesToI32,
   u64ToBytes,
-  bytesToU64,
   serializableObjectsArrayToBytes,
+  i32ToBytes,
 } from '@massalabs/as-types';
 import {
   Address,
@@ -20,7 +13,6 @@ import {
   generateEvent,
   transferCoins,
 } from '@massalabs/massa-as-sdk';
-import { PersistentMap } from '../libraries/PersistentMap';
 import {
   _notApproved,
   _notExecuted,
@@ -31,7 +23,7 @@ import {
   buildApprovalKey,
   getApprovalCount,
   required,
-} from './utils';
+} from './multisig-internals';
 import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
 import { Transaction } from '../structs/Transaction';
 
@@ -39,8 +31,8 @@ export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
 
   const args = new Args(bs);
-  const required = args.nextI32().unwrap();
   const owners: string[] = args.nextStringArray().unwrap();
+  const required = args.nextI32().unwrap();
   assert(owners.length > 0, 'owners required');
   assert(required > 0 && required <= owners.length, 'invalid required');
 

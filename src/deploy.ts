@@ -6,13 +6,13 @@ import { deploySC, WalletClient, ISCData } from '@massalabs/massa-sc-deployer';
 import {
   Args,
   ArrayTypes,
+  BUILDNET_CHAIN_ID,
   DefaultProviderUrls,
   MassaUnits,
 } from '@massalabs/massa-web3';
 
 dotenv.config();
 
-// const publicApi = 'https://node.dusa.io/testnet';
 const publicApi = DefaultProviderUrls.BUILDNET;
 
 const privKey = process.env.WALLET_PRIVATE_KEY;
@@ -38,13 +38,13 @@ const required = 2;
     deployerAccount,
     [
       {
-        data: readFileSync(path.join(__dirname, 'build', 'Multisig.wasm')),
-        coins: BigInt(1) * MassaUnits.oneMassa,
-        args: new Args().addI32(required).addArray(owners, ArrayTypes.STRING),
+        data: readFileSync(path.join(__dirname, 'build', 'deployer.wasm')),
+        coins: 10n * MassaUnits.oneMassa,
       },
     ],
-    BigInt(0),
-    BigInt(4_200_000_000),
+    BUILDNET_CHAIN_ID,
+    0n,
+    4_200_000_000n,
     true,
   );
 })();

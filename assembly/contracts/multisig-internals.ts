@@ -1,8 +1,4 @@
-import {
-  bytesToFixedSizeArray,
-  bytesToI32,
-  fixedSizeArrayToBytes,
-} from '@massalabs/as-types';
+import { Args, bytesToI32 } from '@massalabs/as-types';
 import { Address, Context, Storage } from '@massalabs/massa-as-sdk';
 import { Transaction } from '../structs/Transaction';
 import {
@@ -27,7 +23,7 @@ export function getApprovalCount(txId: u64): i32 {
 
 export function owners(): string[] {
   return Storage.has(OWNERS)
-    ? bytesToFixedSizeArray<string>(Storage.get(OWNERS))
+    ? new Args(Storage.get(OWNERS)).nextStringArray().unwrap()
     : [];
 }
 
@@ -95,5 +91,5 @@ export function removeOwner(owner: string): void {
 }
 
 export function setOwners(owners: string[]): void {
-  Storage.set(OWNERS, fixedSizeArrayToBytes(owners));
+  Storage.set(OWNERS, new Args().add(owners).serialize());
 }

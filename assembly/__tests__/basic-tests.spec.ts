@@ -1,22 +1,12 @@
-import {
-  Args,
-  bytesToFixedSizeArray,
-  bytesToI32,
-  bytesToU64,
-  fixedSizeArrayToBytes,
-  u64ToBytes,
-} from '@massalabs/as-types';
+import { Args, bytesToI32, bytesToU64, u64ToBytes } from '@massalabs/as-types';
 import { APPROVED, IS_OWNER, OWNERS, REQUIRED } from '../storage/Multisig';
 import {
   Address,
   Context,
   Storage,
-  balance,
   balanceOf,
   changeCallStack,
   generateEvent,
-  mockAdminContext,
-  mockScCall,
   resetStorage,
 } from '@massalabs/massa-as-sdk';
 import { approve, execute, submit } from '../contracts/Multisig';
@@ -25,7 +15,9 @@ import {
   _notApproved,
   buildApprovalKey,
   getApprovalCount,
-} from '../contracts/utils';
+  setOwners,
+  owners as getOwners,
+} from '../contracts/multisig-internals';
 
 const user1 = generateDumbAddress();
 const user2 = generateDumbAddress();
@@ -41,14 +33,15 @@ describe('Multisig', () => {
     // const args = new Args().add(owners).add(required);
     // constructor(args.serialize());
     // mockAdminContext(false);
-    Storage.set(OWNERS, fixedSizeArrayToBytes(owners));
+
+    setOwners(owners);
     Storage.set(REQUIRED, u64ToBytes(2));
     for (let i = 0; i < owners.length; i++) {
       IS_OWNER.set(owners[i], true);
     }
   });
   it('Should be correctly initialized', () => {
-    const _owners = bytesToFixedSizeArray<string>(Storage.get(OWNERS));
+    const _owners = getOwners();
     expect(_owners.length).toBe(3);
 
     const _required = bytesToI32(Storage.get(REQUIRED));

@@ -1,5 +1,5 @@
 import { stringToBytes } from '@massalabs/as-types';
-import { PersistentMap } from '../libraries/PersistentMap';
+import { PersistentMap } from '@dusalabs/core';
 import { Transaction } from '../structs/Transaction';
 
 export const OWNERS = stringToBytes('owners');
