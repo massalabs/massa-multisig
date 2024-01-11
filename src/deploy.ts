@@ -8,6 +8,7 @@ import {
   ArrayTypes,
   BUILDNET_CHAIN_ID,
   DefaultProviderUrls,
+  MAX_GAS_DEPLOYMENT,
   MassaUnits,
 } from '@massalabs/massa-web3';
 
@@ -44,7 +45,7 @@ const required = 2;
     ],
     BUILDNET_CHAIN_ID,
     0n,
-    4_200_000_000n,
+    MAX_GAS_DEPLOYMENT,
     true,
   );
 })();

@@ -12,9 +12,10 @@ import {
 // GETTERS
 
 export function getApprovalCount(txId: u64): i32 {
+  const _owners = owners();
   let count = 0;
-  for (let i = 0; i < owners().length; i++) {
-    if (APPROVED.contains(buildApprovalKey(txId, new Address(owners()[i])))) {
+  for (let i = 0; i < _owners.length; i++) {
+    if (hasApproved(txId, new Address(_owners[i]))) {
       count++;
     }
   }
@@ -31,6 +32,17 @@ export function required(): i32 {
   return bytesToI32(Storage.get(REQUIRED));
 }
 
+export function hasApproved(txId: u64, owner: Address): bool {
+  return (
+    APPROVED.contains(buildApprovalKey(txId, owner)) &&
+    APPROVED.getSome(buildApprovalKey(txId, owner))
+  );
+}
+
+export function setApproval(txId: u64, approved: bool): void {
+  APPROVED.set(buildApprovalKey(txId, Context.caller()), approved);
+}
+
 // MODIFIERS
 
 export function _onlyOwner(): void {
@@ -42,11 +54,7 @@ export function _txExists(txId: u64): void {
 }
 
 export function _notApproved(txId: u64): void {
-  const key = buildApprovalKey(txId, Context.caller());
-  assert(
-    !APPROVED.contains(key) || !APPROVED.getSome(key),
-    'tx already approved',
-  );
+  assert(!hasApproved(txId, Context.caller()), 'tx already approved');
 }
 
 export function _notExecuted(txId: u64): void {
@@ -60,10 +68,11 @@ export function buildApprovalKey(txId: u64, owner: Address): string {
 
 export function addTransaction(
   to: Address,
+  method: string,
   value: u64,
   data: StaticArray<u8>,
 ): u64 {
-  const transaction = new Transaction(to, value, data, false);
+  const transaction = new Transaction(to, method, value, data, false);
   const id = TRANSACTIONS.size();
   TRANSACTIONS.set(id, transaction);
   return id;

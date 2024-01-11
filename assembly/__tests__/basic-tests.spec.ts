@@ -1,5 +1,5 @@
 import { Args, bytesToI32, bytesToU64, u64ToBytes } from '@massalabs/as-types';
-import { APPROVED, IS_OWNER, OWNERS, REQUIRED } from '../storage/Multisig';
+import { IS_OWNER, REQUIRED } from '../storage/Multisig';
 import {
   Address,
   Context,
@@ -13,10 +13,10 @@ import { approve, execute, submit } from '../contracts/Multisig';
 import { Transaction } from '../structs/Transaction';
 import {
   _notApproved,
-  buildApprovalKey,
   getApprovalCount,
   setOwners,
   owners as getOwners,
+  hasApproved,
 } from '../contracts/multisig-internals';
 
 const user1 = generateDumbAddress();
@@ -75,8 +75,7 @@ describe('Multisig', () => {
     _approve(user1, id);
 
     expect(getApprovalCount(id)).toBe(1);
-    const key = buildApprovalKey(id, new Address(user1));
-    expect(APPROVED.get(key, false)).toBe(true);
+    expect(hasApproved(id, Context.caller())).toBe(true);
   });
   it('should not be able to execute while required threshold is not met', () => {
     throws('approval threshold not met', () => {
@@ -112,7 +111,7 @@ describe('Multisig', () => {
 
 const _submit = (caller: string): u64 => {
   setCaller(caller);
-  const args = new Args().add(new Transaction(new Address(user4), 1, []));
+  const args = new Args().add(new Transaction(new Address(user4), '', 1, []));
   const id = submit(args.serialize());
   return bytesToU64(id);
 };

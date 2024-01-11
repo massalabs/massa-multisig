@@ -4,6 +4,7 @@ import { Address } from '@massalabs/massa-as-sdk';
 export class Transaction implements Serializable {
   constructor(
     public to: Address = new Address(''),
+    public method: string = '',
     public value: u64 = 0,
     public data: StaticArray<u8> = [],
     public executed: bool = false,

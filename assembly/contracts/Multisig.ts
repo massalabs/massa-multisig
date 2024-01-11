@@ -11,6 +11,7 @@ import {
   call,
   createEvent,
   generateEvent,
+  getBytecodeOf,
   transferCoins,
 } from '@massalabs/massa-as-sdk';
 import {
@@ -20,9 +21,10 @@ import {
   _txExists,
   addOwner,
   addTransaction,
-  buildApprovalKey,
   getApprovalCount,
+  hasApproved,
   required,
+  setApproval,
 } from './multisig-internals';
 import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
 import { Transaction } from '../structs/Transaction';
@@ -53,12 +55,13 @@ export function receive(_: StaticArray<u8>): void {
 export function submit(bs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(bs);
   const to = new Address(args.nextString().unwrap());
+  const method = args.nextString().unwrap();
   const value = args.nextU64().unwrap();
   const data = args.nextBytes().unwrap();
 
   _onlyOwner();
 
-  const id = addTransaction(to, value, data);
+  const id = addTransaction(to, method, value, data);
 
   const event = createEvent('Submit', [
     id.toString(),
@@ -80,7 +83,7 @@ export function approve(bs: StaticArray<u8>): void {
   _notApproved(txId);
   _notExecuted(txId);
 
-  APPROVED.set(buildApprovalKey(txId, Context.caller()), true);
+  setApproval(txId, true);
 
   const event = createEvent('Approve', [
     txId.toString(),
@@ -103,9 +106,12 @@ export function execute(bs: StaticArray<u8>): void {
   tx.executed = true;
   TRANSACTIONS.set(txId, tx);
 
-  transferCoins(tx.to, tx.value);
-  // OR
-  // call(tx.to, 'receive', new Args().add(tx.data), tx.value);
+  if (getBytecodeOf(tx.to).length > 0) {
+    // is contract
+    call(tx.to, 'receive', new Args().add(tx.data), tx.value);
+  } else {
+    transferCoins(tx.to, tx.value);
+  }
 
   const event = createEvent('Execute', [txId.toString()]);
   generateEvent(event);
@@ -119,9 +125,8 @@ export function revoke(bs: StaticArray<u8>): void {
   _txExists(txId);
   _notExecuted(txId);
 
-  const key = buildApprovalKey(txId, Context.caller());
-  assert(APPROVED.contains(key), 'tx not approved');
-  APPROVED.set(key, false);
+  assert(hasApproved(txId, Context.caller()), 'tx not approved');
+  setApproval(txId, false);
 
   const event = createEvent('Revoke', [
     Context.caller().toString(),
@@ -134,7 +139,7 @@ export function revoke(bs: StaticArray<u8>): void {
 // ============  VIEW  ==================
 // ======================================
 
-class GetTransactionsReturn extends Transaction {}
+// TODO: include approvals
 
 export function getTransactions(_: StaticArray<u8>): StaticArray<u8> {
   const txs: Transaction[] = [];
