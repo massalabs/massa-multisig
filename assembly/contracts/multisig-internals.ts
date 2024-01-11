@@ -61,7 +61,12 @@ export function _notExecuted(txId: u64): void {
   assert(!TRANSACTIONS.getSome(txId).executed, 'tx already executed');
 }
 
+export function _isMultisig(): void {
+  assert(Context.callee() == Context.caller(), 'not multisig');
+}
+
 // HELPERS
+
 export function buildApprovalKey(txId: u64, owner: Address): string {
   return txId.toString() + owner.toString();
 }

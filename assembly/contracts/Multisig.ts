@@ -19,12 +19,15 @@ import {
   _notExecuted,
   _onlyOwner,
   _txExists,
-  addOwner,
+  addOwner as _addOwner,
   addTransaction,
   getApprovalCount,
   hasApproved,
   required,
+  removeOwner as _removeOwner,
   setApproval,
+  owners,
+  _isMultisig,
 } from './multisig-internals';
 import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
 import { Transaction } from '../structs/Transaction';
@@ -39,7 +42,7 @@ export function constructor(bs: StaticArray<u8>): void {
   assert(required > 0 && required <= owners.length, 'invalid required');
 
   for (let i = 0; i < owners.length; i++) {
-    addOwner(owners[i]);
+    _addOwner(owners[i]);
   }
   Storage.set(REQUIRED, i32ToBytes(required));
 }
@@ -107,8 +110,7 @@ export function execute(bs: StaticArray<u8>): void {
   TRANSACTIONS.set(txId, tx);
 
   if (getBytecodeOf(tx.to).length > 0) {
-    // is contract
-    call(tx.to, 'receive', new Args().add(tx.data), tx.value);
+    call(tx.to, tx.method, new Args().add(tx.data), tx.value);
   } else {
     transferCoins(tx.to, tx.value);
   }
@@ -132,6 +134,34 @@ export function revoke(bs: StaticArray<u8>): void {
     Context.caller().toString(),
     txId.toString(),
   ]);
+  generateEvent(event);
+}
+
+// WARNING: these two functions can be called by anyone, and do not require the threshold of approvals
+// TODO
+
+export function addOwner(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const owner = args.nextString().unwrap();
+
+  _isMultisig();
+
+  _addOwner(owner);
+
+  const event = createEvent('AddOwner', [owner]);
+  generateEvent(event);
+}
+
+export function removeOwner(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const owner = args.nextString().unwrap();
+
+  _isMultisig();
+  assert(owners().length - 1 >= required(), 'cannot remove owner');
+
+  _removeOwner(owner);
+
+  const event = createEvent('RemoveOwner', [owner]);
   generateEvent(event);
 }
 
