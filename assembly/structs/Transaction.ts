@@ -13,6 +13,7 @@ export class Transaction implements Serializable {
   serialize(): StaticArray<u8> {
     return new Args()
       .add(this.to)
+      .add(this.method)
       .add(this.value)
       .add(this.data)
       .add(this.executed)
@@ -22,9 +23,11 @@ export class Transaction implements Serializable {
   deserialize(data: StaticArray<u8>, offset: i32): Result<i32> {
     const args = new Args(data, offset);
     this.to = new Address(args.nextString().unwrap());
+    this.method = args.nextString().unwrap();
     this.value = args.nextU64().unwrap();
     this.data = args.nextBytes().unwrap();
-    this.executed = args.nextBool().unwrap();
+    const executed = args.nextBool();
+    this.executed = executed.isOk() ? executed.unwrap() : false;
     return new Result(args.offset);
   }
 }

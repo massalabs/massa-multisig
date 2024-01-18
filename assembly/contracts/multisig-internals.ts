@@ -71,13 +71,7 @@ export function buildApprovalKey(txId: u64, owner: Address): string {
   return txId.toString() + owner.toString();
 }
 
-export function addTransaction(
-  to: Address,
-  method: string,
-  value: u64,
-  data: StaticArray<u8>,
-): u64 {
-  const transaction = new Transaction(to, method, value, data, false);
+export function addTransaction(transaction: Transaction): u64 {
   const id = TRANSACTIONS.size();
   TRANSACTIONS.set(id, transaction);
   return id;

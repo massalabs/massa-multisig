@@ -57,21 +57,13 @@ export function receive(_: StaticArray<u8>): void {
 
 export function submit(bs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(bs);
-  const to = new Address(args.nextString().unwrap());
-  const method = args.nextString().unwrap();
-  const value = args.nextU64().unwrap();
-  const data = args.nextBytes().unwrap();
+  const tx = args.nextSerializable<Transaction>().unwrap();
 
   _onlyOwner();
 
-  const id = addTransaction(to, method, value, data);
+  const id = addTransaction(tx);
 
-  const event = createEvent('Submit', [
-    id.toString(),
-    to.toString(),
-    value.toString(),
-    data.toString(),
-  ]);
+  const event = createEvent('Submit', [id.toString()]);
   generateEvent(event);
 
   return u64ToBytes(id);
@@ -131,8 +123,8 @@ export function revoke(bs: StaticArray<u8>): void {
   setApproval(txId, false);
 
   const event = createEvent('Revoke', [
-    Context.caller().toString(),
     txId.toString(),
+    Context.caller().toString(),
   ]);
   generateEvent(event);
 }
