@@ -3,10 +3,12 @@ import {
   fileToByteArray,
   generateEvent,
   transferCoins,
+  createEvent,
 } from '@massalabs/massa-as-sdk';
 import { IMultisig } from '../interfaces/IMultisig';
-import { ONE_COIN, createEvent } from '@dusalabs/core';
 import { Args } from '@massalabs/as-types';
+
+const ONE_COIN = u64(10 ** 9);
 
 export function deploy(bs: StaticArray<u8>): void {
   const multisigWasm: StaticArray<u8> = fileToByteArray('build/Multisig.wasm');
