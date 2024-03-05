@@ -5,13 +5,12 @@ import {
   i32ToBytes,
 } from '@massalabs/as-types';
 import {
-  Address,
   Context,
   Storage,
   call,
   createEvent,
   generateEvent,
-  getBytecodeOf,
+  isAddressEoa,
   transferCoins,
 } from '@massalabs/massa-as-sdk';
 import {
@@ -29,9 +28,13 @@ import {
   owners,
   _isMultisig,
 } from './multisig-internals';
-import { REQUIRED, APPROVED, TRANSACTIONS } from '../storage/Multisig';
+import { REQUIRED, TRANSACTIONS } from '../storage/Multisig';
 import { Transaction } from '../structs/Transaction';
 
+/**
+ * @dev Contract constructor sets initial owners and required number of confirmations.
+ * @param {StaticArray<u8>} bs - Byte string containing the list of initial owners and required number of approvals
+ */
 export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
 
@@ -47,6 +50,10 @@ export function constructor(bs: StaticArray<u8>): void {
   Storage.set(REQUIRED, i32ToBytes(required));
 }
 
+/**
+ * @notice Function to receive coins
+ * @param _ unused
+ */
 export function receive(_: StaticArray<u8>): void {
   const event = createEvent('Deposit', [
     Context.caller().toString(),
@@ -55,6 +62,11 @@ export function receive(_: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+/**
+ * @dev Allows an owner to submit and confirm a transaction.
+ * @param {StaticArray<u8>} bs - Byte string containing the transaction to submit
+ * @returns Returns transaction ID.
+ */
 export function submit(bs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(bs);
   const tx = args.nextSerializable<Transaction>().unwrap();
@@ -69,6 +81,10 @@ export function submit(bs: StaticArray<u8>): StaticArray<u8> {
   return u64ToBytes(id);
 }
 
+/**
+ * @dev Allows an owner to confirm a transaction.
+ * @param {StaticArray<u8>} bs - Byte string containing the transaction ID to approve
+ */
 export function approve(bs: StaticArray<u8>): void {
   const args = new Args(bs);
   const txId = args.nextU64().unwrap();
@@ -87,6 +103,10 @@ export function approve(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+/**
+ * @dev Allows an owner to execute a confirmed transaction.
+ * @param {StaticArray<u8>} bs - Byte string containing the transaction ID to execute
+ */
 export function execute(bs: StaticArray<u8>): void {
   const args = new Args(bs);
   const txId = args.nextU64().unwrap();
@@ -111,6 +131,10 @@ export function execute(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+/**
+ * @dev Allows an owner to revoke a transaction.
+ * @param {StaticArray<u8>} bs - Byte string containing the transaction ID to revoke
+ */
 export function revoke(bs: StaticArray<u8>): void {
   const args = new Args(bs);
   const txId = args.nextU64().unwrap();
@@ -129,9 +153,14 @@ export function revoke(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
-// WARNING: these two functions can be called by anyone, and do not require the threshold of approvals
-// TODO
+// ======================================
+// ===========  MULTISIG  ===============
+// ======================================
 
+/**
+ * @dev Allows to add a new owner. Transaction has to be sent by the multisig contract itself.
+ * @param bs byte string containing the owner Address of new owner.
+ */
 export function addOwner(bs: StaticArray<u8>): void {
   const args = new Args(bs);
   const owner = args.nextString().unwrap();
@@ -144,6 +173,10 @@ export function addOwner(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+/**
+ * @dev Allows to remove an owner. Transaction has to be sent by the multisig contract itself.
+ * @param bs byte string containing the owner Address of the owner to remove.
+ */
 export function removeOwner(bs: StaticArray<u8>): void {
   const args = new Args(bs);
   const owner = args.nextString().unwrap();
@@ -197,7 +230,10 @@ export function changeRequirement(bs: StaticArray<u8>): void {
 // ======================================
 
 // TODO: include approvals
-
+/**
+ * @param _ unused
+ * @returns the list of txs.
+ */
 export function getTransactions(_: StaticArray<u8>): StaticArray<u8> {
   const txs: Transaction[] = [];
 

@@ -22,10 +22,10 @@ export class Transaction implements Serializable {
 
   deserialize(data: StaticArray<u8>, offset: i32): Result<i32> {
     const args = new Args(data, offset);
-    this.to = new Address(args.nextString().unwrap());
-    this.method = args.nextString().unwrap();
-    this.value = args.nextU64().unwrap();
-    this.data = args.nextBytes().unwrap();
+    this.to = new Address(args.nextString().expect('Error deserializing to'));
+    this.method = args.nextString().expect('Error deserializing method');
+    this.value = args.nextU64().expect('Error deserializing value');
+    this.data = args.nextBytes().expect('Error deserializing data');
     const executed = args.nextBool();
     this.executed = executed.isOk() ? executed.unwrap() : false;
     return new Result(args.offset);
