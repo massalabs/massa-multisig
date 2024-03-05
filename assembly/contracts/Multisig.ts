@@ -157,6 +157,41 @@ export function removeOwner(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+/**
+ * @dev Allows to replace an owner. Transaction has to be sent by the multisig contract itself.
+ * @param bs byte string containing the owner Address of the owner to replace and the Address of the new owner.
+ */
+export function replaceOwner(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const oldOwner = args.nextString().unwrap();
+  const newOwner = args.nextString().unwrap();
+
+  _isMultisig();
+
+  _removeOwner(oldOwner);
+  _addOwner(newOwner);
+
+  const event = createEvent('ReplaceOwner', [oldOwner, newOwner]);
+  generateEvent(event);
+}
+
+/**
+ * @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
+ * @param _required Number of required confirmations.
+ */
+export function changeRequirement(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const required = args.nextI32().unwrap();
+
+  _isMultisig();
+  assert(required > 0 && required <= owners().length, 'invalid required');
+
+  Storage.set(REQUIRED, i32ToBytes(required));
+
+  const event = createEvent('ChangeRequirement', [required.toString()]);
+  generateEvent(event);
+}
+
 // ======================================
 // ============  VIEW  ==================
 // ======================================
