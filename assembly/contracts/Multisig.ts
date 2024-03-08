@@ -3,8 +3,10 @@ import {
   u64ToBytes,
   serializableObjectsArrayToBytes,
   i32ToBytes,
+  nativeTypeArrayToBytes,
 } from '@massalabs/as-types';
 import {
+  Address,
   Context,
   Storage,
   call,
@@ -229,7 +231,6 @@ export function changeRequirement(bs: StaticArray<u8>): void {
 // ============  VIEW  ==================
 // ======================================
 
-// TODO: include approvals
 /**
  * @param _ unused
  * @returns the list of txs.
@@ -243,4 +244,25 @@ export function getTransactions(_: StaticArray<u8>): StaticArray<u8> {
   }
 
   return serializableObjectsArrayToBytes(txs);
+}
+
+/**
+ * @param bs byte string containing the transaction ID.
+ * @returns the addresses that approved the transaction.
+ */
+export function getApprovals(bs: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(bs);
+  const txId = args.nextU64().unwrap();
+
+  const approvals: string[] = [];
+  const _owners = owners();
+
+  for (let i = 0; i < owners.length; i++) {
+    const owner = _owners[i];
+    if (hasApproved(txId, new Address(owner))) {
+      approvals.push(owner);
+    }
+  }
+
+  return nativeTypeArrayToBytes(approvals);
 }
