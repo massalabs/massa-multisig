@@ -26,12 +26,16 @@ const deployerAccount = await WalletClient.getAccountFromSecretKey(privKey);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
 
+const ONE_DAY = 86_400_000n; // 24 * 60 * 60 * 1000
+
+// Change the owners, required, and upgradeDelay to your needs
 const owners: string[] = [
-  'AU1cBirTno1FrMVpUMT96KiQ97wBqqM1z9uJLr3XZKQwJjFLPEar',
-  'AU12jWU88jCx8Pr5gptgM3EUfYuoA5g2jCauFRLZyWzEB7WtByTod',
-  'AU1LhKv5T3Dp1kSGJvgRSTZbXcRx51L5i8GeTddakXyhDMcaihcn',
+  'AU10000000000000000000000000000000000000000000000000',
+  'AU10000000000000000000000000000000000000000000000001',
+  'AU10000000000000000000000000000000000000000000000002',
 ];
 const required = 2;
+const upgradeDelay = ONE_DAY;
 
 (async () => {
   await deploySC(
@@ -41,7 +45,11 @@ const required = 2;
       {
         data: readFileSync(path.join(__dirname, 'build', 'deployer.wasm')),
         coins: 10n * MassaUnits.oneMassa,
-      },
+        args: new Args()
+          .addArray(owners, ArrayTypes.STRING)
+          .addI32(required)
+          .addU64(upgradeDelay),
+      } as ISCData,
     ],
     BUILDNET_CHAIN_ID,
     0n,
