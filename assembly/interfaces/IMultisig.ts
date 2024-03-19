@@ -4,8 +4,13 @@ import { Address, call } from '@massalabs/massa-as-sdk';
 export class IMultisig {
   constructor(public _origin: Address) {}
 
-  init(owners: string[], required: i32): void {
-    call(this._origin, 'constructor', new Args().add(owners).add(required), 0);
+  init(owners: string[], required: i32, upgradeDelay: u64): void {
+    call(
+      this._origin,
+      'constructor',
+      new Args().add(owners).add(required).add(upgradeDelay),
+      0,
+    );
   }
 
   submit(to: string, method: string, value: u64, data: StaticArray<u8>): u64 {

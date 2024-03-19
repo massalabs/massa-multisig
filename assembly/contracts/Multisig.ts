@@ -42,8 +42,11 @@ export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
 
   const args = new Args(bs);
-  const owners: string[] = args.nextStringArray().unwrap();
-  const required = args.nextI32().unwrap();
+  const owners: string[] = args.nextStringArray().expect('owners not found');
+  const required = args.nextI32().expect('required not found');
+  const upgradeDelay = args.nextU64().expect('upgradeDelay not found');
+
+  Upgradeable.__Upgradeable_init(upgradeDelay);
   assert(owners.length > 0, 'owners required');
   assert(required > 0 && required <= owners.length, 'invalid required');
 
