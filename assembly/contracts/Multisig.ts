@@ -32,6 +32,7 @@ import {
 } from './multisig-internals';
 import { REQUIRED, TRANSACTIONS } from '../storage/Multisig';
 import { Transaction } from '../structs/Transaction';
+import { Upgradeable } from '../libraries/Upgradeable';
 
 /**
  * @dev Contract constructor sets initial owners and required number of confirmations.
@@ -225,6 +226,16 @@ export function changeRequirement(bs: StaticArray<u8>): void {
 
   const event = createEvent('ChangeRequirement', [required.toString()]);
   generateEvent(event);
+}
+
+export function proposeUpgrade(newImplementation: StaticArray<u8>): void {
+  _isMultisig();
+  Upgradeable.proposeUpgrade(newImplementation);
+}
+
+export function upgrade(_: StaticArray<u8>): void {
+  _isMultisig();
+  Upgradeable.upgrade();
 }
 
 // ======================================
