@@ -106,11 +106,22 @@ describe('Multisig contract tests', () => {
       const serializedArgs = new Args()
         .add<Array<string>>(ownerList)
         .add(i32(0))
+        .add(u64(0))
         .serialize();
       constructor(serializedArgs);
     }).toThrow();
 
     // no owners
+    expect(() => {
+      const serializedArgs = new Args()
+        .add<Array<string>>([])
+        .add(i32(1))
+        .add(u64(0))
+        .serialize();
+      constructor(serializedArgs);
+    }).toThrow();
+
+    // no upgreadeDelay
     expect(() => {
       const serializedArgs = new Args()
         .add<Array<string>>([])
@@ -131,6 +142,7 @@ describe('Multisig contract tests', () => {
     const serializedArgs = new Args()
       .add<Array<string>>(ownerList)
       .add(nbConfirmations)
+      .add(u64(0))
       .serialize();
     constructor(serializedArgs);
 
