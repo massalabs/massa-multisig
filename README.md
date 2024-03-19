@@ -1,4 +1,21 @@
-# My Massa Smart-contract Project
+# Massa Multisignature Wallet
+
+The purpose of multisig wallets is to increase security by requiring multiple parties to agree on transactions before execution. Transactions can be executed only when confirmed by a predefined number of owners.
+
+Features
+Can hold Massa and all kind of tokens
+Integration with web3 wallets 
+Interacting with any contracts
+ @dev Most important concepts:
+ *      - Threshold: Number of required confirmations for a Multisig transaction.
+ *      - Owners: List of addresses that control the Multisig. They are the only ones that can submit,
+ *        approve and execute transactions.
+ *      - UpgradeDelay: Delay necessary between an upgrade propostition and the actual upgrade
+ *      - Id: Each transaction have a different id to prevent replay attacks.
+ *      - Signature: A valid signature of an owner of the Multisig for a transaction hash.
+ *      - Owners can only be added/removed by the multisig (same for chaning the threshold
+ *        and upgrading the contract)
+ *      - Change the owners, required, and upgradeDelay to your needs in src/deploy.ts when deploying 
 
 ## Build
 
