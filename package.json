@@ -6,8 +6,8 @@
         "test": "asp --summary",
         "build": "npx massa-as-compile",
         "deploy": "ts-node src/deploy.ts",
-        "prettier": "prettier '**/src/**/*.ts' --check && as-prettier --check assembly",
-        "prettier:fix": "prettier '**/src/**/*.ts' --write && as-prettier --write assembly",
+        "prettier": "prettier assembly//**/*.ts --check && as-prettier --check assembly",
+        "prettier:fix": "prettier assembly//**/*.ts --write && as-prettier --write assembly",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "fmt:check": "npm run prettier && npm run lint",
@@ -40,5 +40,8 @@
         "typescript": "^5.3.2"
     },
     "type": "module",
-    "prettier": "@massalabs/prettier-config-as"
+    "prettier": "@massalabs/prettier-config-as",
+    "engines": {
+        "node": ">=16"
+    }
 }

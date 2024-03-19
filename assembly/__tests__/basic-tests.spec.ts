@@ -4,11 +4,7 @@ import {
   constructor,
   getTransactions,
 } from '../contracts/Multisig';
-import {
-  Storage,
-  mockAdminContext,
-  Address,
-} from '@massalabs/massa-as-sdk';
+import { Storage, mockAdminContext, Address } from '@massalabs/massa-as-sdk';
 import {
   Args,
   u64ToBytes,
@@ -52,13 +48,7 @@ const ownerList = [owners[0], owners[1], owners[2]];
 
 // transactions
 const transactions: Array<Transaction> = [
-  new Transaction(
-    new Address(destination),
-    '',
-    u64(15000),
-    [],
-    false,
-  ),
+  new Transaction(new Address(destination), '', u64(15000), [], false),
   new Transaction(
     new Address(destination),
     'getValueAt',
@@ -145,15 +135,15 @@ describe('Multisig contract tests', () => {
     constructor(serializedArgs);
 
     // check the nb of confirmations required is properly stored
-    expect(bytesToU32(Storage.get(REQUIRED))).toBe(
-      nbConfirmations,
-    );
+    expect(bytesToU32(Storage.get(REQUIRED))).toBe(nbConfirmations);
 
     // compare the array of addresses as string to the array of Address in storage
     let serializableStringList: Array<SerializableString> = [];
     for (let i = 0; i < ownerList.length; ++i)
       serializableStringList.push(new SerializableString(ownerList[i]));
-    let ownersFromStorage = new Args(Storage.get(OWNERS)).nextStringArray().unwrap();
+    let ownersFromStorage = new Args(Storage.get(OWNERS))
+      .nextStringArray()
+      .unwrap();
     let serializableOwnerStringList: Array<SerializableString> = [];
     for (let i = 0; i < ownersFromStorage.length; ++i)
       serializableOwnerStringList.push(
@@ -179,11 +169,7 @@ describe('Multisig contract tests', () => {
   test('submit operation by non owner', () => {
     // expect the operation submission to fail
     expect(() => {
-      submit(
-        new Args()
-          .add(transactions[0])
-          .serialize(),
-      );
+      submit(new Args().add(transactions[0]).serialize());
     }).toThrow();
   });
 
@@ -192,13 +178,9 @@ describe('Multisig contract tests', () => {
     switchUser(owners[1]);
 
     // expect the operation index to be 1
-    expect(
-      submit(
-        new Args()
-          .add(transactions[0])
-          .serialize(),
-      ),
-    ).toStrictEqual(u64ToBytes(0));
+    expect(submit(new Args().add(transactions[0]).serialize())).toStrictEqual(
+      u64ToBytes(0),
+    );
 
     let transaction = retrieveOperation(0);
 
@@ -219,13 +201,9 @@ describe('Multisig contract tests', () => {
     confirmingOwnersIndexes = [0];
     opIndex = 1;
 
-    expect(
-      submit(
-        new Args()
-          .add(transactions[0])
-          .serialize(),
-      ),
-    ).toStrictEqual(u64ToBytes(opIndex));
+    expect(submit(new Args().add(transactions[0]).serialize())).toStrictEqual(
+      u64ToBytes(opIndex),
+    );
 
     let ownerAddress = owners[confirmingOwnersIndexes[0]];
     switchUser(ownerAddress);
@@ -246,13 +224,9 @@ describe('Multisig contract tests', () => {
     confirmingOwnersIndexes = [1, 2];
     opIndex = 2;
 
-    expect(
-      submit(
-        new Args()
-          .add(transactions[0])
-          .serialize(),
-      ),
-    ).toStrictEqual(u64ToBytes(opIndex));
+    expect(submit(new Args().add(transactions[0]).serialize())).toStrictEqual(
+      u64ToBytes(opIndex),
+    );
 
     for (let i = 0; i < confirmingOwnersIndexes.length; ++i) {
       let ownerAddress = owners[confirmingOwnersIndexes[i]];
@@ -277,13 +251,9 @@ describe('Multisig contract tests', () => {
     confirmingOwnersIndexes = [1, 2];
     opIndex = 3;
 
-    expect(
-      submit(
-        new Args()
-          .add(transactions[0])
-          .serialize(),
-      ),
-    ).toStrictEqual(u64ToBytes(opIndex));
+    expect(submit(new Args().add(transactions[0]).serialize())).toStrictEqual(
+      u64ToBytes(opIndex),
+    );
 
     for (let i = 0; i < confirmingOwnersIndexes.length; ++i) {
       let ownerAddress = owners[confirmingOwnersIndexes[i]];
@@ -302,13 +272,9 @@ describe('Multisig contract tests', () => {
     // pick owners[1] as the operation creator
     switchUser(owners[1]);
 
-    expect(
-      submit(
-        new Args()
-          .add(transactions[1])
-          .serialize(),
-      ),
-    ).toStrictEqual(u64ToBytes(4));
+    expect(submit(new Args().add(transactions[1]).serialize())).toStrictEqual(
+      u64ToBytes(4),
+    );
 
     // check that the operation is correctly stored
     let transaction = retrieveOperation(4);
