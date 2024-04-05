@@ -60,7 +60,7 @@ export function constructor(bs: StaticArray<u8>): void {
  * @notice Function to receive coins
  * @param _ unused
  */
-export function receive(_: StaticArray<u8>): void {
+export function receiveCoins(_: StaticArray<u8>): void {
   const event = createEvent('Deposit', [
     Context.caller().toString(),
     Context.transferredCoins().toString(),

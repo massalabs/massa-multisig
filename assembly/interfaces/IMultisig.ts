@@ -23,8 +23,8 @@ export class IMultisig {
     return bytesToU64(res);
   }
 
-  receive(value: u64): void {
-    call(this._origin, 'receive', NoArg, value);
+  receiveCoins(value: u64): void {
+    call(this._origin, 'receiveCoins', NoArg, value);
   }
 
   approve(txId: u64): void {
