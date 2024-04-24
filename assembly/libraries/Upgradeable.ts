@@ -27,6 +27,13 @@ export class Upgradeable {
   static __Upgradeable_init(timelock: u64): void {
     assert(!Storage.has(PERIOD), 'Upgradeable__AlreadyInitialized');
 
+    this.__Upgradeable_setUpgradeDelay(timelock);
+  }
+
+  /**
+   * @dev Update the upgrade delay
+   */
+  static __Upgradeable_setUpgradeDelay(timelock: u64): void {
     Storage.set(PERIOD, u64ToBytes(timelock));
   }
 

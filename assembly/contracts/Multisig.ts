@@ -231,6 +231,22 @@ export function changeRequirement(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+/**
+ * @dev Allows to change the delay necessary before a SC upgrade. Transaction has to be sent by wallet.
+ * @param upgradeDelay time between the proposition & validation of an upgrade in ms.
+ */
+export function changeUpgradeDelay(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const upgradeDelay = args.nextU64().unwrap();
+
+  _isMultisig();
+
+  Upgradeable.__Upgradeable_setUpgradeDelay(upgradeDelay);
+
+  const event = createEvent('changeUpgradeDelay', [upgradeDelay.toString()]);
+  generateEvent(event);
+}
+
 export function proposeUpgrade(newImplementation: StaticArray<u8>): void {
   _isMultisig();
   Upgradeable.proposeUpgrade(newImplementation);
