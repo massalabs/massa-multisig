@@ -48,12 +48,13 @@ const ownerList = [owners[0], owners[1], owners[2]];
 
 // transactions
 const transactions: Array<Transaction> = [
-  new Transaction(new Address(destination), '', u64(15000), [], false),
+  new Transaction(new Address(destination), '', u64(15000), [], 0, false),
   new Transaction(
     new Address(destination),
     'getValueAt',
     u64(15000),
     new Args().add(42).serialize(),
+    0,
     false,
   ),
 ];
@@ -107,6 +108,7 @@ describe('Multisig contract tests', () => {
         .add<Array<string>>(ownerList)
         .add(i32(0))
         .add(u64(0))
+        .add(u64(0))
         .serialize();
       constructor(serializedArgs);
     }).toThrow();
@@ -117,15 +119,17 @@ describe('Multisig contract tests', () => {
         .add<Array<string>>([])
         .add(i32(1))
         .add(u64(0))
+        .add(u64(0))
         .serialize();
       constructor(serializedArgs);
     }).toThrow();
 
-    // no upgreadeDelay
+    // no Delay
     expect(() => {
       const serializedArgs = new Args()
         .add<Array<string>>([])
         .add(i32(1))
+        .add(u64(0))
         .serialize();
       constructor(serializedArgs);
     }).toThrow();
@@ -142,6 +146,7 @@ describe('Multisig contract tests', () => {
     const serializedArgs = new Args()
       .add<Array<string>>(ownerList)
       .add(nbConfirmations)
+      .add(u64(0))
       .add(u64(0))
       .serialize();
     constructor(serializedArgs);
