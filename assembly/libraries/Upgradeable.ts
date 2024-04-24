@@ -7,6 +7,7 @@ import {
   setBytecode,
 } from '@massalabs/massa-as-sdk';
 import { u64ToBytes, stringToBytes, bytesToU64 } from '@massalabs/as-types';
+import { SafeMath } from './SafeMath';
 
 /**
  * @dev Make sure no other modules are using the same storage keys
@@ -42,7 +43,7 @@ export class Upgradeable {
    */
   static islocked(): bool {
     return (
-      this.timelock() + bytesToU64(Storage.get(PERIOD)) < Context.timestamp()
+      SafeMath.add(this.timelock(), bytesToU64(Storage.get(PERIOD))) < Context.timestamp()
     );
   }
 
