@@ -228,6 +228,7 @@ describe('Multisig contract tests', () => {
 
     switchUser(deployerAddress);
     expect(hasApproved(opIndex, new Address(ownerAddress)));
+    expect(retrieveOperation(1).timestamp).toBe(0);
   });
 
   // validated operation
@@ -255,6 +256,7 @@ describe('Multisig contract tests', () => {
 
     switchUser(deployerAddress);
     expect(getApprovalCount(opIndex)).toBe(2);
+    expect(retrieveOperation(2).timestamp).toBeGreaterThan(0);
   });
 
   // validated operation 2
@@ -282,6 +284,7 @@ describe('Multisig contract tests', () => {
 
     switchUser(deployerAddress);
     expect(getApprovalCount(opIndex)).toBe(2);
+    expect(retrieveOperation(3).timestamp).toBeGreaterThan(0);
   });
 
   // test of the call operation constructor
