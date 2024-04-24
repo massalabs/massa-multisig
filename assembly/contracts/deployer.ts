@@ -19,7 +19,8 @@ export function deploy(bs: StaticArray<u8>): void {
   const owners = args.nextStringArray().unwrap();
   const required = args.nextI32().unwrap();
   const upgradeDelay = args.nextU64().unwrap();
-  multisig.init(owners, required, upgradeDelay);
+  const validationDelay = args.nextU64().unwrap();
+  multisig.init(owners, required, upgradeDelay, validationDelay);
 
   generateEvent(createEvent('NEW_MULTISIG', [multisig._origin.toString()]));
 }

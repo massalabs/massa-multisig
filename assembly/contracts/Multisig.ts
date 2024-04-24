@@ -4,6 +4,7 @@ import {
   serializableObjectsArrayToBytes,
   i32ToBytes,
   nativeTypeArrayToBytes,
+  bytesToU64,
 } from '@massalabs/as-types';
 import {
   Address,
@@ -30,13 +31,14 @@ import {
   owners,
   _isMultisig,
 } from './multisig-internals';
-import { REQUIRED, TRANSACTIONS } from '../storage/Multisig';
+import { DELAY, REQUIRED, TRANSACTIONS } from '../storage/Multisig';
 import { Transaction } from '../structs/Transaction';
 import { Upgradeable } from '../libraries/Upgradeable';
+import { SafeMath } from '../libraries/SafeMath';
 
 /**
  * @dev Contract constructor sets initial owners and required number of confirmations.
- * @param {StaticArray<u8>} bs - Byte string containing the list of initial owners and required number of approvals
+ * @param {StaticArray<u8>} bs - Byte string containing the list of initial owners, required number of approvals, the upgrade delay and the execution delay.
  */
 export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
@@ -45,6 +47,7 @@ export function constructor(bs: StaticArray<u8>): void {
   const owners: string[] = args.nextStringArray().expect('owners not found');
   const required = args.nextI32().expect('required not found');
   const upgradeDelay = args.nextU64().expect('upgradeDelay not found');
+  const executionDelay = args.nextU64().expect('executionDelay not found');
 
   Upgradeable.__Upgradeable_init(upgradeDelay);
   assert(owners.length > 0, 'owners required');
@@ -54,6 +57,7 @@ export function constructor(bs: StaticArray<u8>): void {
     _addOwner(owners[i]);
   }
   Storage.set(REQUIRED, i32ToBytes(required));
+  Storage.set(DELAY, u64ToBytes(executionDelay));
 }
 
 /**
@@ -102,6 +106,12 @@ export function approve(bs: StaticArray<u8>): void {
 
   setApproval(txId, true);
 
+  if (getApprovalCount(txId) == required()) {
+    const tx = TRANSACTIONS.getSome(txId);
+    tx.timestamp = Context.timestamp();
+    TRANSACTIONS.set(txId, tx);
+  }
+
   const event = createEvent('Approve', [
     txId.toString(),
     Context.caller().toString(),
@@ -124,6 +134,13 @@ export function execute(bs: StaticArray<u8>): void {
   assert(getApprovalCount(txId) >= required(), 'not enough approvals');
 
   const tx = TRANSACTIONS.getSome(txId);
+
+  assert(
+    SafeMath.add(tx.timestamp, bytesToU64(Storage.get(DELAY))) <=
+      Context.timestamp(),
+    'delay not passed',
+  );
+
   tx.executed = true;
   TRANSACTIONS.set(txId, tx);
 
@@ -150,6 +167,13 @@ export function revoke(bs: StaticArray<u8>): void {
   _notExecuted(txId);
 
   assert(hasApproved(txId, Context.caller()), 'tx not approved');
+
+  if (getApprovalCount(txId) == required()) {
+    const tx = TRANSACTIONS.getSome(txId);
+    tx.timestamp = u64(0);
+    TRANSACTIONS.set(txId, tx);
+  }
+
   setApproval(txId, false);
 
   const event = createEvent('Revoke', [
@@ -228,6 +252,24 @@ export function changeRequirement(bs: StaticArray<u8>): void {
   Storage.set(REQUIRED, i32ToBytes(required));
 
   const event = createEvent('ChangeRequirement', [required.toString()]);
+  generateEvent(event);
+}
+
+/**
+ * @dev Allows to change the delay necessary before the execution of a tx. Transaction has to be sent by wallet.
+ * @param executionDelay time between the validation & the execution of a tx in ms.
+ */
+export function changeExecutionDelay(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const executionDelay = args.nextU64().unwrap();
+
+  _isMultisig();
+
+  Storage.set(DELAY, u64ToBytes(executionDelay));
+
+  const event = createEvent('changeExecutionDelay', [
+    executionDelay.toString(),
+  ]);
   generateEvent(event);
 }
 

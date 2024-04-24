@@ -7,6 +7,7 @@ export class Transaction implements Serializable {
     public method: string = '',
     public value: u64 = 0,
     public data: StaticArray<u8> = [],
+    public timestamp: u64 = 0,
     public executed: bool = false,
   ) {}
 
@@ -16,6 +17,7 @@ export class Transaction implements Serializable {
       .add(this.method)
       .add(this.value)
       .add(this.data)
+      .add(this.timestamp)
       .add(this.executed)
       .serialize();
   }
@@ -26,6 +28,7 @@ export class Transaction implements Serializable {
     this.method = args.nextString().expect('Error deserializing method');
     this.value = args.nextU64().expect('Error deserializing value');
     this.data = args.nextBytes().expect('Error deserializing data');
+    this.timestamp = args.nextU64().expect('Error deserializing timestamp');
     const executed = args.nextBool();
     this.executed = executed.isOk() ? executed.unwrap() : false;
     return new Result(args.offset);

@@ -4,11 +4,20 @@ import { Address, call } from '@massalabs/massa-as-sdk';
 export class IMultisig {
   constructor(public _origin: Address) {}
 
-  init(owners: string[], required: i32, upgradeDelay: u64): void {
+  init(
+    owners: string[],
+    required: i32,
+    upgradeDelay: u64,
+    validationDelay: u64,
+  ): void {
     call(
       this._origin,
       'constructor',
-      new Args().add(owners).add(required).add(upgradeDelay),
+      new Args()
+        .add(owners)
+        .add(required)
+        .add(upgradeDelay)
+        .add(validationDelay),
       0,
     );
   }

@@ -43,7 +43,8 @@ export class Upgradeable {
    */
   static islocked(): bool {
     return (
-      SafeMath.add(this.timelock(), bytesToU64(Storage.get(PERIOD))) < Context.timestamp()
+      SafeMath.add(this.timelock(), bytesToU64(Storage.get(PERIOD))) <
+      Context.timestamp()
     );
   }
 

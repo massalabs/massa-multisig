@@ -27,6 +27,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
 
 const ONE_DAY = 86_400_000n; // 24 * 60 * 60 * 1000
+const ONE_HOUR = 3_600_000n; // 60 * 60 * 1000
 
 // Change the owners, required, and upgradeDelay to your needs
 const owners: string[] = [
@@ -36,6 +37,7 @@ const owners: string[] = [
 ];
 const required = 2;
 const upgradeDelay = ONE_DAY;
+const validationDelay = ONE_HOUR;
 
 (async () => {
   await deploySC(
@@ -48,7 +50,8 @@ const upgradeDelay = ONE_DAY;
         args: new Args()
           .addArray(owners, ArrayTypes.STRING)
           .addI32(required)
-          .addU64(upgradeDelay),
+          .addU64(upgradeDelay)
+          .addU64(validationDelay),
       } as ISCData,
     ],
     BUILDNET_CHAIN_ID,
