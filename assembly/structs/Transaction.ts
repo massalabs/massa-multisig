@@ -28,7 +28,8 @@ export class Transaction implements Serializable {
     this.method = args.nextString().expect('Error deserializing method');
     this.value = args.nextU64().expect('Error deserializing value');
     this.data = args.nextBytes().expect('Error deserializing data');
-    this.timestamp = args.nextU64().expect('Error deserializing timestamp');
+    const timestamp = args.nextU64();
+    this.timestamp = timestamp.isOk() ? timestamp.unwrap() : 0;
     const executed = args.nextBool();
     this.executed = executed.isOk() ? executed.unwrap() : false;
     return new Result(args.offset);
