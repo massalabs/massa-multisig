@@ -7,7 +7,7 @@ import {
   stringToBytes,
 } from '@massalabs/as-types';
 import { Address, call, Storage } from '@massalabs/massa-as-sdk';
-import { OWNERS, REQUIRED } from '../storage/Multisig';
+import { DELAY, OWNERS, REQUIRED } from '../storage/Multisig';
 import { buildApprovalKey } from '../contracts/multisig-internals';
 
 const APPROVED = 'approved';
@@ -77,6 +77,10 @@ export class IMultisig {
 
   required(): i32 {
     return bytesToI32(Storage.getOf(this._origin, REQUIRED));
+  }
+
+  delay(): i32 {
+    return bytesToU64(Storage.getOf(this._origin, DELAY));
   }
 
   hasApproved(txId: u64, owner: Address): bool {
