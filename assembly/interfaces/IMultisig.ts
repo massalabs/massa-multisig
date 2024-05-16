@@ -1,6 +1,16 @@
-import { Args, NoArg, bytesToU64 } from '@massalabs/as-types';
-import { Address, call } from '@massalabs/massa-as-sdk';
+import {
+  Args,
+  NoArg,
+  byteToBool,
+  bytesToI32,
+  bytesToU64,
+  stringToBytes,
+} from '@massalabs/as-types';
+import { Address, call, Storage } from '@massalabs/massa-as-sdk';
+import { OWNERS, REQUIRED } from '../storage/Multisig';
+import { buildApprovalKey } from '../contracts/multisig-internals';
 
+const APPROVED = 'approved';
 export class IMultisig {
   constructor(public _origin: Address) {}
 
@@ -46,5 +56,41 @@ export class IMultisig {
 
   revoke(txId: u64): void {
     call(this._origin, 'revoke', new Args().add(txId), 0);
+  }
+
+  getApprovalCount(txId: u64): i32 {
+    const _owners = this.owners();
+    let count = 0;
+    for (let i = 0; i < _owners.length; i++) {
+      if (this.hasApproved(txId, new Address(_owners[i]))) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  owners(): string[] {
+    return Storage.hasOf(this._origin, OWNERS)
+      ? new Args(Storage.getOf(this._origin, OWNERS)).nextStringArray().unwrap()
+      : [];
+  }
+
+  required(): i32 {
+    return bytesToI32(Storage.getOf(this._origin, REQUIRED));
+  }
+
+  hasApproved(txId: u64, owner: Address): bool {
+    return (
+      Storage.hasOf(
+        this._origin,
+        stringToBytes(APPROVED + '::' + buildApprovalKey(txId, owner)),
+      ) &&
+      byteToBool(
+        Storage.getOf(
+          this._origin,
+          stringToBytes(APPROVED + '::' + buildApprovalKey(txId, owner)),
+        ),
+      )
+    );
   }
 }
