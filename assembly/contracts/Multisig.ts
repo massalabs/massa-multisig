@@ -38,7 +38,11 @@ import { SafeMath } from '../libraries/SafeMath';
 
 /**
  * @dev Contract constructor sets initial owners and required number of confirmations.
- * @param {StaticArray<u8>} bs - Byte string containing the list of initial owners, required number of approvals, the upgrade delay and the execution delay.
+ * @param {StaticArray<u8>} bs - Byte string containing
+ * - the list of initial owners
+ * - required number of approvals
+ * - the upgrade delay
+ * - the execution delay
  */
 export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
