@@ -55,7 +55,7 @@ const validationDelay = ONE_HOUR;
       } as ISCData,
     ],
     BUILDNET_CHAIN_ID,
-    0n,
+    10_000_000n,
     MAX_GAS_DEPLOYMENT,
     true,
   );
