@@ -49,7 +49,6 @@ export const _KEY_ELEMENT_SUFFIX = '::';
  */
 export class PersistentMap<K, V> {
   private _elementPrefix: string;
-  private _size: usize;
 
   /**
    * Creates or restores a persistent map with a given storage prefix.
@@ -64,7 +63,6 @@ export class PersistentMap<K, V> {
    */
   constructor(prefix: string) {
     this._elementPrefix = prefix + _KEY_ELEMENT_SUFFIX;
-    this._size = 0;
   }
 
   /**
@@ -75,6 +73,10 @@ export class PersistentMap<K, V> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return stringToBytes(this._elementPrefix + key.toString());
+  }
+
+  private _keySize(): StaticArray<u8> {
+    return stringToBytes('size::' + this._elementPrefix);
   }
 
   /**
@@ -106,8 +108,10 @@ export class PersistentMap<K, V> {
    * ```
    * @returns the map size
    */
-  size(): usize {
-    return this._size;
+  size(): u64 {
+    return Storage.has(this._keySize())
+      ? bytesToU64(Storage.get(this._keySize()))
+      : u64(0);
   }
 
   /**
@@ -134,7 +138,7 @@ export class PersistentMap<K, V> {
    */
   _increaseSize(key: K): void {
     if (!this.contains(key)) {
-      this._size += 1;
+      Storage.set(this._keySize(), u64ToBytes(this.size() + 1));
     }
   }
 
@@ -142,8 +146,8 @@ export class PersistentMap<K, V> {
    * Decreases the internal map size counter
    */
   _decreaseSize(): void {
-    if (this._size > 0) {
-      this._size -= 1;
+    if (this.size() > 0) {
+      Storage.set(this._keySize(), u64ToBytes(this.size() - 1));
     }
   }
 
@@ -272,7 +276,7 @@ export class PersistentMap<K, V> {
    */
   set(key: K, value: V): void {
     // assert map size wont overflow
-    assert(this._size < Usize.MAX_VALUE, 'map size overflow');
+    assert(this.size() < u64.MAX_VALUE, 'map size overflow');
 
     this._increaseSize(key);
 
