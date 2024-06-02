@@ -5,7 +5,7 @@
     "scripts": {
         "test": "asp --summary",
         "build": "npx massa-as-compile",
-        "deploy": "ts-node src/deploy.ts",
+        "deploy": "tsx src/deploy.ts",
         "prettier": "prettier assembly//**/*.ts --check && as-prettier --check assembly",
         "prettier:fix": "prettier assembly//**/*.ts --write && as-prettier --write assembly",
         "lint": "eslint .",
@@ -34,9 +34,8 @@
         "assemblyscript": "^0.27.22",
         "dotenv": "^16.3.1",
         "prettier": "^3.1.0",
-        "ts-node": "^10.9.1",
         "tslib": "^2.6.2",
-        "tsx": "^4.7.0",
+        "tsx": "^4.11.0",
         "typescript": "^5.3.2"
     },
     "type": "module",
