@@ -149,7 +149,7 @@ export function execute(bs: StaticArray<u8>): void {
   TRANSACTIONS.set(txId, tx);
 
   if (!isAddressEoa(tx.to.toString())) {
-    call(tx.to, tx.method, new Args().add(tx.data), tx.value);
+    call(tx.to, tx.method, new Args(tx.data), tx.value);
   } else {
     transferCoins(tx.to, tx.value);
   }
