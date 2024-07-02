@@ -54,7 +54,7 @@ export function constructor(bs: StaticArray<u8>): void {
   const executionDelay = args.nextU64().expect('executionDelay not found');
 
   Upgradeable.__Upgradeable_init(upgradeDelay);
-  assert(owners.length > 0, 'owners required');
+  assert(owners.length > 1, 'At least 2 owners required');
   assert(required > 0 && required <= owners.length, 'invalid required');
 
   for (let i = 0; i < owners.length; i++) {
@@ -216,7 +216,10 @@ export function removeOwner(bs: StaticArray<u8>): void {
   const owner = args.nextString().unwrap();
 
   _isMultisig();
-  assert(owners().length - 1 >= required(), 'cannot remove owner');
+  assert(
+    owners().length - 1 >= required() && owners().length > 2,
+    'cannot remove owner',
+  );
 
   _removeOwner(owner);
 
