@@ -330,13 +330,20 @@ export function upgrade(_: StaticArray<u8>): void {
 // ======================================
 
 /**
- * @param _ unused
+ * @param bs byte string containing the id of the transaction to start from and to end to.
+ * @dev The arguments are optional. If not provided, the function will return all the transactions.
+ * To prevent using up all the gas. If To is provided, From must be provided as well.
  * @returns the list of txs.
  */
-export function getTransactions(_: StaticArray<u8>): StaticArray<u8> {
+export function getTransactions(bs: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(bs);
+  const from = args.nextU64().isOk() ? args.nextU64().unwrap() : u64(0);
+  const to = args.nextU64().isOk()
+    ? args.nextU64().unwrap()
+    : TRANSACTIONS.size();
   const txs: Transaction[] = [];
 
-  for (let i: usize = 0; i < TRANSACTIONS.size(); i++) {
+  for (let i = from; i < to; i++) {
     const tx = TRANSACTIONS.getSome(i);
     txs.push(tx);
   }
