@@ -187,6 +187,25 @@ export function revoke(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+export function setTimestamp(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const txId = args.nextU64().unwrap();
+
+  _onlyOwner();
+  _txExists(txId);
+  _notExecuted(txId);
+
+  if (getApprovalCount(txId) >= required()) {
+    const tx = TRANSACTIONS.getSome(txId);
+    assert(tx.timestamp == u64(0), 'timestamp already set')
+    tx.timestamp = Context.timestamp();
+    TRANSACTIONS.set(txId, tx);
+
+    const event = createEvent('SetTimestamp', [txId.toString()]);
+    generateEvent(event);
+  }
+}
+
 // ======================================
 // ===========  MULTISIG  ===============
 // ======================================
