@@ -197,7 +197,7 @@ export function setTimestamp(bs: StaticArray<u8>): void {
 
   if (getApprovalCount(txId) >= required()) {
     const tx = TRANSACTIONS.getSome(txId);
-    assert(tx.timestamp == u64(0), 'timestamp already set')
+    assert(tx.timestamp == u64(0), 'timestamp already set');
     tx.timestamp = Context.timestamp();
     TRANSACTIONS.set(txId, tx);
 
