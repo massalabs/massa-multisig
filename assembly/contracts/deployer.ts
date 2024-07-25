@@ -10,7 +10,11 @@ import { Args } from '@massalabs/as-types';
 
 const ONE_COIN = u64(10 ** 9);
 
-export function constructor(bs: StaticArray<u8>): void {
+export function constructor(): void {
+  // This is the deployer contract, so we don't need to do anything here
+}
+
+export function deploy(bs: StaticArray<u8>): void {
   const multisigWasm: StaticArray<u8> = fileToByteArray('build/Multisig.wasm');
   const multisig = new IMultisig(createSC(multisigWasm));
   transferCoins(multisig._origin, 1 * ONE_COIN);
