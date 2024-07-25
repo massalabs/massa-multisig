@@ -21,7 +21,7 @@ Interacting with any contracts
 The executionDelay starts once the threshold is met, and is not reset when another wallet approves the tx. It can be reset if a wallet revokes approval and the approval count goes below the threshold.
 
 Anyone can send coins to the multisig using the receiveCoins functions.
-Only the owner can call submit, approve, execute & revoke functions.
+Only owners can call submit, approve, execute & revoke functions.
 Only the multisig itself can call addOwner, removeOwner, replaceOwner, changeRequirement, changeExecutionDelay, changeUpgradeDelay, proposeUpgrade & upgrade functions. Thus, they can only be called by submitting the call through the multisig, approving & executing it.
 
 ## Build
@@ -38,7 +38,6 @@ Prerequisites :
 
 - You must add a `.env` file at the root of the repository with the following keys set to valid values :
   - WALLET_PRIVATE_KEY="wallet_private_key"
-  - JSON_RPC_URL_PUBLIC=<https://test.massa.net/api/v2:33035>
 
 These keys will be the ones used by the deployer script to interact with the blockchain.
 
