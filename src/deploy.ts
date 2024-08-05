@@ -2,24 +2,21 @@ import * as dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { deploySC, WalletClient, ISCData } from '@massalabs/massa-sc-deployer';
+import { deploySC, WalletClient } from '@massalabs/massa-sc-deployer';
 import {
   Args,
   ArrayTypes,
   BUILDNET_CHAIN_ID,
   DefaultProviderUrls,
-  MAX_GAS_DEPLOYMENT,
+  fromMAS,
   MassaUnits,
+  MAX_GAS_DEPLOYMENT,
 } from '@massalabs/massa-web3';
 
 dotenv.config();
 
-const publicApi = DefaultProviderUrls.BUILDNET;
-
 const privKey = process.env.WALLET_PRIVATE_KEY;
-if (!privKey) {
-  throw new Error('Missing WALLET_PRIVATE_KEY in .env file');
-}
+if (!privKey) throw new Error('Missing WALLET_PRIVATE_KEY in .env file');
 
 const deployerAccount = await WalletClient.getAccountFromSecretKey(privKey);
 
@@ -31,9 +28,8 @@ const ONE_HOUR = 3_600_000n; // 60 * 60 * 1000
 
 // Change the owners, required, and upgradeDelay to your needs
 const owners: string[] = [
-  'AU10000000000000000000000000000000000000000000000000',
-  'AU10000000000000000000000000000000000000000000000001',
-  'AU10000000000000000000000000000000000000000000000002',
+  'AU12jWU88jCx8Pr5gptgM3EUfYuoA5g2jCauFRLZyWzEB7WtByTod',
+  'AU1cBirTno1FrMVpUMT96KiQ97wBqqM1z9uJLr3XZKQwJjFLPEar',
 ];
 const required = 2;
 const upgradeDelay = ONE_DAY;
@@ -41,7 +37,7 @@ const validationDelay = ONE_HOUR;
 
 (async () => {
   await deploySC(
-    publicApi,
+    DefaultProviderUrls.BUILDNET,
     deployerAccount,
     [
       {
@@ -52,11 +48,10 @@ const validationDelay = ONE_HOUR;
           .addI32(required)
           .addU64(upgradeDelay)
           .addU64(validationDelay),
-      } as ISCData,
+      },
     ],
     BUILDNET_CHAIN_ID,
-    0n,
+    fromMAS(0.01),
     MAX_GAS_DEPLOYMENT,
-    true,
   );
 })();
