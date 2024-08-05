@@ -38,7 +38,11 @@ import { SafeMath } from '../libraries/SafeMath';
 
 /**
  * @dev Contract constructor sets initial owners and required number of confirmations.
- * @param {StaticArray<u8>} bs - Byte string containing the list of initial owners, required number of approvals, the upgrade delay and the execution delay.
+ * @param {StaticArray<u8>} bs - Byte string containing
+ * - the list of initial owners
+ * - required number of approvals
+ * - the upgrade delay
+ * - the execution delay
  */
 export function constructor(bs: StaticArray<u8>): void {
   assert(Context.isDeployingContract(), 'already deployed');
@@ -50,7 +54,7 @@ export function constructor(bs: StaticArray<u8>): void {
   const executionDelay = args.nextU64().expect('executionDelay not found');
 
   Upgradeable.__Upgradeable_init(upgradeDelay);
-  assert(owners.length > 0, 'owners required');
+  assert(owners.length > 1, 'At least 2 owners required');
   assert(required > 0 && required <= owners.length, 'invalid required');
 
   for (let i = 0; i < owners.length; i++) {
@@ -145,7 +149,7 @@ export function execute(bs: StaticArray<u8>): void {
   TRANSACTIONS.set(txId, tx);
 
   if (!isAddressEoa(tx.to.toString())) {
-    call(tx.to, tx.method, new Args().add(tx.data), tx.value);
+    call(tx.to, tx.method, new Args(tx.data), tx.value);
   } else {
     transferCoins(tx.to, tx.value);
   }
@@ -183,6 +187,25 @@ export function revoke(bs: StaticArray<u8>): void {
   generateEvent(event);
 }
 
+export function setTimestamp(bs: StaticArray<u8>): void {
+  const args = new Args(bs);
+  const txId = args.nextU64().unwrap();
+
+  _onlyOwner();
+  _txExists(txId);
+  _notExecuted(txId);
+
+  if (getApprovalCount(txId) >= required()) {
+    const tx = TRANSACTIONS.getSome(txId);
+    assert(tx.timestamp == u64(0), 'timestamp already set');
+    tx.timestamp = Context.timestamp();
+    TRANSACTIONS.set(txId, tx);
+
+    const event = createEvent('SetTimestamp', [txId.toString()]);
+    generateEvent(event);
+  }
+}
+
 // ======================================
 // ===========  MULTISIG  ===============
 // ======================================
@@ -212,7 +235,10 @@ export function removeOwner(bs: StaticArray<u8>): void {
   const owner = args.nextString().unwrap();
 
   _isMultisig();
-  assert(owners().length - 1 >= required(), 'cannot remove owner');
+  assert(
+    owners().length - 1 >= required() && owners().length > 2,
+    'cannot remove owner',
+  );
 
   _removeOwner(owner);
 
@@ -304,13 +330,20 @@ export function upgrade(_: StaticArray<u8>): void {
 // ======================================
 
 /**
- * @param _ unused
+ * @param bs byte string containing the id of the transaction to start from and to end to.
+ * @dev The arguments are optional. If not provided, the function will return all the transactions.
+ * To prevent using up all the gas. If To is provided, From must be provided as well.
  * @returns the list of txs.
  */
-export function getTransactions(_: StaticArray<u8>): StaticArray<u8> {
+export function getTransactions(bs: StaticArray<u8>): StaticArray<u8> {
+  const args = new Args(bs);
+  const from = args.nextU64().isOk() ? args.nextU64().unwrap() : u64(0);
+  const to = args.nextU64().isOk()
+    ? args.nextU64().unwrap()
+    : TRANSACTIONS.size();
   const txs: Transaction[] = [];
 
-  for (let i: usize = 0; i < TRANSACTIONS.size(); i++) {
+  for (let i = from; i < to; i++) {
     const tx = TRANSACTIONS.getSome(i);
     txs.push(tx);
   }

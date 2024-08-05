@@ -23,10 +23,9 @@ const deployerAccount = await WalletClient.getAccountFromSecretKey(privKey);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
 
-const ONE_DAY = 86_400_000n; // 24 * 60 * 60 * 1000
-const ONE_HOUR = 3_600_000n; // 60 * 60 * 1000
+const ONE_HOUR = 60 * 60 * 1000;
+const ONE_DAY = 24 * ONE_HOUR;
 
-// Change the owners, required, and upgradeDelay to your needs
 const owners: string[] = [
   'AU12jWU88jCx8Pr5gptgM3EUfYuoA5g2jCauFRLZyWzEB7WtByTod',
   'AU1cBirTno1FrMVpUMT96KiQ97wBqqM1z9uJLr3XZKQwJjFLPEar',
@@ -46,8 +45,8 @@ const validationDelay = ONE_HOUR;
         args: new Args()
           .addArray(owners, ArrayTypes.STRING)
           .addI32(required)
-          .addU64(upgradeDelay)
-          .addU64(validationDelay),
+          .addU64(BigInt(upgradeDelay))
+          .addU64(BigInt(validationDelay)),
       },
     ],
     BUILDNET_CHAIN_ID,

@@ -73,8 +73,9 @@ export function buildApprovalKey(txId: u64, owner: Address): string {
 
 export function addTransaction(transaction: Transaction): u64 {
   const id = TRANSACTIONS.size();
-  // ensure timestamp was not wrongly set
+  // ensure transaction was not wrongly set
   transaction.timestamp = 0;
+  transaction.executed = false;
   TRANSACTIONS.set(id, transaction);
   return id;
 }
