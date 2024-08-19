@@ -24,6 +24,11 @@ Anyone can send coins to the multisig using the receiveCoins functions.
 Only owners can call submit, approve, execute & revoke functions.
 Only the multisig itself can call addOwner, removeOwner, replaceOwner, changeRequirement, changeExecutionDelay, changeUpgradeDelay, proposeUpgrade & upgrade functions. Thus, they can only be called by submitting the call through the multisig, approving & executing it.
 
+## Security
+
+The code was fully audited for security by a third party professional security firm.
+The report is publicly available as the [security_audit.pdf](security_audit.pdf) file at the root of the repository.
+
 ## Build
 
 By default this will build all files in `assembly/contracts` directory.
