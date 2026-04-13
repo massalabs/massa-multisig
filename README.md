@@ -41,15 +41,16 @@ npm run build
 
 Prerequisites :
 
-- You must add a `.env` file at the root of the repository with the following keys set to valid values :
-  - WALLET_PRIVATE_KEY="wallet_private_key"
+- You must add a `.env` file at the root of the repository with the following keys set to valid values:
+- `PRIVATE_KEY="wallet_private_key"`
+- `RPC_URL="https://..."` (optional, defaults to buildnet)
 
-These keys will be the ones used by the deployer script to interact with the blockchain.
+These keys will be the ones used by the deployment script to interact with the blockchain.
 
 Adapt `required`, `owners` & `upgradeDelay` to your liking (cf. important concepts) in `src/deploy.ts`.
 
 The following command will build contracts in `assembly/contracts` directory and execute the deployment script
-`src/deploy.ts`. This script will deploy on the node specified in the `.env` file.
+`src/deploy.ts`. This script deploys `Multisig.wasm` directly and automatically runs its constructor.
 
 ```shell
 npm run deploy
