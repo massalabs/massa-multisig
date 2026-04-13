@@ -56,6 +56,64 @@ The following command will build contracts in `assembly/contracts` directory and
 npm run deploy
 ```
 
+## Proposal lifecycle (important)
+
+Submitting a proposal does **not** count as an approval for the proposing owner. The proposer must call approve separately if they want their confirmation included toward the threshold.
+
+The approve flow only records confirmations. When the number of approvals reaches the threshold, the proposal is **not** executed automatically. Someone with the right to execute must call execute explicitly (and respect any `executionDelay` enforced on-chain after the threshold is met).
+
+These behaviors are intentional in the current design. Automatically approving on behalf of the submitter, or automatically executing once the threshold is reached, could be explored as future improvements but are not implemented today.
+
+## Create an add-member proposal
+
+The repository also includes a helper script to submit a multisig proposal that adds a new owner.
+
+```shell
+npm run propose:add-member -- <multisig-address> <new-member-address>
+```
+
+The script uses the same `.env` configuration as deployment and prints the submitted operation id plus the final events emitted by the contract.
+
+## Approve a proposal
+
+The repository also includes a helper script to approve an existing multisig proposal by id.
+
+```shell
+npm run approve:proposal -- <multisig-address> <proposal-id>
+```
+
+The script uses the same `.env` configuration as deployment and prints the approval operation id plus the final events emitted by the contract.
+
+## Execute a proposal
+
+The repository also includes a helper script to execute an existing multisig proposal by id.
+
+```shell
+npm run execute:proposal -- <multisig-address> <proposal-id>
+```
+
+The script uses the same `.env` configuration as deployment and prints the execution operation id plus the final events emitted by the contract.
+
+## List proposals
+
+The repository also includes a read-only helper script to retrieve all multisig proposals and their current statuses.
+
+```shell
+npm run list:proposals -- <multisig-address>
+```
+
+The script prints a JSON array with each proposal's id, target, method, value, approvals, timestamp, execution flag, and derived status.
+
+## Get multisig parameters
+
+The repository also includes a read-only helper script to retrieve the multisig members, threshold, and execution delay directly from storage.
+
+```shell
+npm run get:multisig-parameters -- <multisig-address>
+```
+
+The script prints a JSON object containing the `members`, `threshold`, and `delay`.
+
 ## Unit tests
 
 The test framework documentation is available here: [as-pect docs](https://as-pect.gitbook.io/as-pect)

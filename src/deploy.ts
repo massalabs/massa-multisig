@@ -23,8 +23,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
 
 const owners: string[] = [
-  'AU1y3xaRuqAWdftK76F51B3BhpXEvH7QHEAc7ZTV3koUcPVgAzvr',
-  'AU122a1FX59Ao5qNk5TUyjAKVx1WwtUPxxgqnVp2UnAub7T4vFtnP'
+  'AU1wN8rn4SkwYSTDF3dHFY4U28KtsqKL1NnEjDZhHnHEy6cEQm53',
+  'AU1y3xaRuqAWdftK76F51B3BhpXEvH7QHEAc7ZTV3koUcPVgAzvr'
 ];
 const required = 1n;
 const upgradeDelay = 1000n;
