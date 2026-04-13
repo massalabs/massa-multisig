@@ -2,55 +2,48 @@ import * as dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { deploySC, WalletClient } from '@massalabs/massa-sc-deployer';
 import {
+  Account,
   Args,
   ArrayTypes,
-  BUILDNET_CHAIN_ID,
-  DefaultProviderUrls,
-  fromMAS,
-  MassaUnits,
-  MAX_GAS_DEPLOYMENT,
+  JsonRpcProvider,
+  Mas,
 } from '@massalabs/massa-web3';
 
 dotenv.config();
 
-const privKey = process.env.WALLET_PRIVATE_KEY;
-if (!privKey) throw new Error('Missing WALLET_PRIVATE_KEY in .env file');
+const rpcUrl = process.env.RPC_URL?.trim();
 
-const deployerAccount = await WalletClient.getAccountFromSecretKey(privKey);
+const account = await Account.fromEnv();
+const provider = rpcUrl
+  ? JsonRpcProvider.fromRPCUrl(rpcUrl, account)
+  : JsonRpcProvider.buildnet(account);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(path.dirname(__filename));
 
-const ONE_HOUR = 60 * 60 * 1000;
-const ONE_DAY = 24 * ONE_HOUR;
-
 const owners: string[] = [
-  'AU12jWU88jCx8Pr5gptgM3EUfYuoA5g2jCauFRLZyWzEB7WtByTod',
-  'AU1cBirTno1FrMVpUMT96KiQ97wBqqM1z9uJLr3XZKQwJjFLPEar',
+  'AU1y3xaRuqAWdftK76F51B3BhpXEvH7QHEAc7ZTV3koUcPVgAzvr',
+  'AU122a1FX59Ao5qNk5TUyjAKVx1WwtUPxxgqnVp2UnAub7T4vFtnP'
 ];
-const required = 2;
-const upgradeDelay = ONE_DAY;
-const validationDelay = ONE_HOUR;
+const required = 1n;
+const upgradeDelay = 1000n;
+const validationDelay = 1000n;
 
-(async () => {
-  await deploySC(
-    DefaultProviderUrls.BUILDNET,
-    deployerAccount,
-    [
-      {
-        data: readFileSync(path.join(__dirname, 'build', 'deployer.wasm')),
-        coins: 10n * MassaUnits.oneMassa,
-        args: new Args()
-          .addArray(owners, ArrayTypes.STRING)
-          .addI32(required)
-          .addU64(BigInt(upgradeDelay))
-          .addU64(BigInt(validationDelay)),
-      },
-    ],
-    BUILDNET_CHAIN_ID,
-    fromMAS(0.01),
-    MAX_GAS_DEPLOYMENT,
-  );
-})();
+const constructorArgs = new Args()
+  .addArray(owners, ArrayTypes.STRING)
+  .addI32(required)
+  .addU64(upgradeDelay)
+  .addU64(validationDelay);
+
+const multisig = await provider.deploySC({
+  byteCode: Uint8Array.from(
+    readFileSync(path.join(__dirname, 'build', 'Multisig.wasm')),
+  ),
+  parameter: constructorArgs,
+  // Preserve the 1 MAS initial balance previously transferred by the deployer contract.
+  coins: Mas.fromMas(1n),
+  waitFinalExecution: true,
+});
+
+process.stdout.write(`Deployed multisig address: ${multisig.address}\n`);
