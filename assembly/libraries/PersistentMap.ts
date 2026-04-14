@@ -40,12 +40,12 @@ export const _KEY_ELEMENT_SUFFIX = '::';
  * (2) Since all data stored on the blockchain is kept in a single key-value store under the contract account,
  * you must always use a *unique storage prefix* for different collections to avoid data collision.
  *
- * @typeParam K - The generic type parameter `K` can be any [valid AssemblyScript type](https://docs.assemblyscript.org/basics/types).
- * @typeParam V - The generic type parameter `V` can be any [valid AssemblyScript type](https://docs.assemblyscript.org/basics/types).
+ * @typeParam K - The generic type parameter `K` can be any valid AssemblyScript type.
+ * @typeParam V - The generic type parameter `V` can be any valid AssemblyScript type.
  *
  * MISC:
  *
- * Original code from Near (https://github.com/near/near-sdk-as/blob/master/sdk-core/assembly/collections/persistentMap.ts)
+ * Original from Near (https://github.com/near/near-sdk-as/blob/master/sdk-core/assembly/collections/persistentMap.ts)
  */
 export class PersistentMap<K, V> {
   private _elementPrefix: string;

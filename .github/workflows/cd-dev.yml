@@ -1,0 +1,29 @@
+name: multisig CD dev
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci-tests.yml
+
+  publish-dev:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org
+
+      - name: publish
+        run: |
+          npm ci
+          npm run build
+          npm run publish:dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}

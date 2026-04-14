@@ -1,5 +1,10 @@
-name: massa sc ci tests
-on: [push]
+name: multisig CI
+on:
+  pull_request:
+  workflow_call:
+  push:
+    branches:
+      - main
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
@@ -8,11 +13,17 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
           cache: 'npm'
 
       - name: Install
-        run: npm install
+        run: npm ci
+
+      - name: Code quality
+        run: npm run fmt:check
+
+      - name: Build
+        run: npm run build
 
       - name: Test
         run: npm run test
