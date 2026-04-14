@@ -1,5 +1,5 @@
 {
-    "name": "multisig",
+    "name": "@massalabs/multisig-contract",
     "version": "0.0.1",
     "description": "",
     "scripts": {
@@ -11,12 +11,15 @@
         "get:multisig-parameters": "tsx src/get-multisig-parameters.ts",
         "list:proposals": "tsx src/list-proposals.ts",
         "propose:add-member": "tsx src/propose-add-member.ts",
-        "prettier": "prettier assembly//**/*.ts --check && as-prettier --check assembly",
-        "prettier:fix": "prettier assembly//**/*.ts --write && as-prettier --write assembly",
+        "prettier": "prettier assembly//**/*.ts --check",
+        "prettier:fix": "prettier assembly//**/*.ts --write",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "fmt:check": "npm run prettier && npm run lint",
-        "fmt": "npm run prettier:fix && npm run lint:fix"
+        "fmt": "npm run prettier:fix && npm run lint:fix",
+        "publish:dev": "bash ./scripts/publish-dev.sh",
+        "publish:latest": "npm publish --access public",
+        "prepublishOnly": "npm run build"
     },
     "keywords": [],
     "author": "",
@@ -25,17 +28,17 @@
         "@as-pect/cli": "^8.0.1",
         "@assemblyscript/loader": "^0.27.22",
         "@massalabs/as-transformer": "^0.3.2",
-        "@massalabs/as-types": "^2.0.0",
+        "@massalabs/as-types": "^2.1.0",
         "@massalabs/eslint-config": "^0.0.10",
-        "@massalabs/massa-as-sdk": "^2.5.2",
+        "@massalabs/massa-as-sdk": "^3.0.2",
         "@massalabs/massa-sc-compiler": "^0.1.0",
         "@massalabs/massa-web3": "^5.3.0",
         "@massalabs/prettier-config-as": "^0.0.2",
         "@massalabs/sc-standards": "^0.1.1",
         "@types/node": "^20.10.3",
-        "@types/yargs": "^17.0.32",
         "as-bignum": "github:massalabs/as-bignum#0105eb596b2fa707c00712e811a2efdfcb8a9848",
         "assemblyscript": "^0.27.22",
+        "assemblyscript-prettier": "^3.0.4",
         "dotenv": "^16.3.1",
         "prettier": "^3.1.0",
         "tslib": "^2.6.2",
@@ -44,6 +47,10 @@
     },
     "type": "module",
     "prettier": "@massalabs/prettier-config-as",
+    "files": [
+        "index.ts",
+        "assembly"
+    ],
     "engines": {
         "node": ">=16"
     }
