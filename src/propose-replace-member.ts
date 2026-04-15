@@ -15,7 +15,7 @@ function parseCliArgs(): {
   multisigAddress: string;
   currentMemberAddress: string;
   newMemberAddress: string;
-} {
+  } {
   const [multisigAddress, currentMemberAddress, newMemberAddress] = process.argv
     .slice(2)
     .map((value) => value.trim());
