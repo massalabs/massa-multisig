@@ -74,6 +74,46 @@ npm run propose:add-member -- <multisig-address> <new-member-address>
 
 The script uses the same `.env` configuration as deployment and prints the submitted operation id plus the final events emitted by the contract.
 
+## Create a revoke-member proposal
+
+The repository also includes a helper script to submit a multisig proposal that removes an existing owner.
+
+```shell
+npm run propose:revoke-member -- <multisig-address> <member-address>
+```
+
+The script uses the same `.env` configuration as deployment and prints the submitted operation id plus the final events emitted by the contract.
+
+## Create a replace-member proposal
+
+The repository also includes a helper script to submit a multisig proposal that replaces an existing owner with a new one.
+
+```shell
+npm run propose:replace-member -- <multisig-address> <current-member-address> <new-member-address>
+```
+
+The script uses the same `.env` configuration as deployment and prints the submitted operation id plus the final events emitted by the contract.
+
+## Create a threshold proposal
+
+The repository also includes a helper script to submit a multisig proposal that updates the required approval threshold.
+
+```shell
+npm run propose:threshold -- <multisig-address> <threshold>
+```
+
+The script uses the same `.env` configuration as deployment and prints the submitted operation id plus the final events emitted by the contract.
+
+## Create an execution-delay proposal
+
+The repository also includes a helper script to submit a multisig proposal that updates the execution delay.
+
+```shell
+npm run propose:execution-delay -- <multisig-address> <execution-delay>
+```
+
+The script uses the same `.env` configuration as deployment and prints the submitted operation id plus the final events emitted by the contract.
+
 ## Approve a proposal
 
 The repository also includes a helper script to approve an existing multisig proposal by id.
