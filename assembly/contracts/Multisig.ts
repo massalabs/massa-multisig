@@ -362,7 +362,7 @@ export function getApprovals(bs: StaticArray<u8>): StaticArray<u8> {
   const approvals: string[] = [];
   const _owners = owners();
 
-  for (let i = 0; i < owners.length; i++) {
+  for (let i = 0; i < _owners.length; i++) {
     const owner = _owners[i];
     if (hasApproved(txId, new Address(owner))) {
       approvals.push(owner);
