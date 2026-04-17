@@ -25,6 +25,9 @@ import {
 // address of the contract set in vm-mock. must match with contractAddr of @massalabs/massa-as-sdk/vm-mock/vm.js
 const contractAddr = 'AS12BqZEQ6sByhRLyEuf0YbQmcF2PsDdkNNG1akBJu9XcjZA1eT';
 
+// default deployer address (caller != callee so Context.isDeployingContract() is true)
+const deployerAddress = 'AU12UBnqTHDQALpocVBnkPNy7y5CndUJQTLutaVDDFgMJcq5kQiKq';
+
 // the single owner of the multisig
 const soloOwner = 'AU1qDAxGJ387ETi9JRQzZWSPKYq4YPXrFvdiE4VoXUaiAt38JFEC';
 
@@ -65,6 +68,8 @@ describe('Single-owner multisig tests', () => {
 
   test('constructor accepts a single owner with required=1', () => {
     resetStorage();
+    // Context.isDeployingContract() requires caller != callee.
+    changeCallStack(deployerAddress + ' , ' + contractAddr);
 
     expect(() => {
       constructor(
