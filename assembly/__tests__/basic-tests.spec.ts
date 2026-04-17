@@ -3,8 +3,16 @@ import {
   approve,
   constructor,
   getTransactions,
+  execute,
+  revoke,
 } from '../contracts/Multisig';
-import { Storage, mockAdminContext, Address } from '@massalabs/massa-as-sdk';
+import {
+  Storage,
+  mockAdminContext,
+  Address,
+  balanceOf,
+} from '@massalabs/massa-as-sdk';
+import { mockBalance } from '@massalabs/massa-as-sdk/assembly/vm-mock';
 import {
   Args,
   u64ToBytes,
@@ -306,137 +314,88 @@ describe('Multisig contract tests', () => {
     expect(transaction.data).toStrictEqual(new Args().add(42).serialize());
   });
 
-  // TODO: can't test transferCoins & call operation on massa for now
-  // // operation 2 is validated, let's execute it
-  // test('execute transaction operation with success', () => {
-  //   let destinationBalance = Coins.balanceOf(destination);
-  //   let contractBalance = Coins.balanceOf(contractAddr);
-  //   let initDestinationBalance = destinationBalance;
-  //   let initContractBalance = contractBalance;
+  // operation 2 is validated, let's execute it
+  test('execute transaction operation with success', () => {
+    // Fund the multisig so transferCoins in execute() has balance to move.
+    // The multisig has two validated 15000-coin transactions (op 2 and op 3)
+    // but only op 2 will actually be executed in this test, so 15000 is enough.
+    mockBalance(contractAddr, u64(15000));
 
-  //   switchUser(owners[1]);
-  //   generateEvent(
-  //     createEvent('BALANCES BEFORE', [
-  //       initDestinationBalance.toString(),
-  //       initContractBalance.toString(),
-  //     ]),
-  //   );
+    const initDestinationBalance = balanceOf(destination);
+    const initContractBalance = balanceOf(contractAddr);
 
-  //   expect(() => {
-  //     execute(new Args().add(u64(2)).serialize());
-  //   }).not.toThrow();
+    switchUser(owners[1]);
+    execute(new Args().add(u64(2)).serialize());
 
-  //   // retrieve the operation and check that it is marked as executed
-  //   let transaction = retrieveOperation(i32(2));
-  //   expect(transaction.executed).toBe(true);
+    // op 2 is marked as executed
+    const transaction = retrieveOperation(i32(2));
+    expect(transaction.executed).toBe(true);
 
-  //   destinationBalance = Coins.balanceOf(destination);
-  //   contractBalance = Coins.balanceOf(contractAddr);
-  //   generateEvent(
-  //     createEvent('BALANCES AFTER', [
-  //       destinationBalance.toString(),
-  //       contractBalance.toString(),
-  //     ]),
-  //   );
+    // the coins were actually transferred from the multisig to the destination
+    expect(balanceOf(destination)).toBe(initDestinationBalance + u64(15000));
+    expect(balanceOf(contractAddr) + u64(15000)).toBe(initContractBalance);
+  });
 
-  //   // check that the transfer has been done
-  //   expect(destinationBalance).toBe(initDestinationBalance + 15000);
-  //   expect(contractBalance + 15000).toBe(initContractBalance);
-  // });
+  // operation 1 is not validated (only 1/2 approvals), let's try to execute it
+  test('execute transaction operation with failure', () => {
+    const initDestinationBalance = balanceOf(destination);
+    const initContractBalance = balanceOf(contractAddr);
 
-  //   // operation 1 is not validated, let's try to execute it
-  //   test('execute transaction operation with failure', () => {
-  //     let destinationBalance = Coins.balanceOf(destination);
-  //     let contractBalance = Coins.balanceOf(contractAddr);
-  //     let initDestinationBalance = destinationBalance;
-  //     let initContractBalance = contractBalance;
+    switchUser(owners[1]);
 
-  //     switchUser(owners[1]);
-  //     generateEvent(
-  //       createEvent('BALANCES BEFORE', [
-  //         initDestinationBalance.toString(),
-  //         initContractBalance.toString(),
-  //       ]),
-  //     );
+    // execute must revert because op 1 doesn't meet the required threshold
+    expect(() => {
+      execute(new Args().add(u64(1)).serialize());
+    }).toThrow();
 
-  //     expect(() => {
-  //       execute(new Args().add(u64(1)).serialize());
-  //     }).toThrow();
+    // the operation is still in storage
+    expect(() => {
+      retrieveOperation(i32(1));
+    }).not.toThrow();
 
-  //     // the operation is not supposed to be deleted
-  //     expect(() => {
-  //       retrieveOperation(i32(1));
-  //     }).not.toThrow();
+    // no funds moved
+    expect(balanceOf(destination)).toBe(initDestinationBalance);
+    expect(balanceOf(contractAddr)).toBe(initContractBalance);
+  });
 
-  //     destinationBalance = Coins.balanceOf(destination);
-  //     contractBalance = Coins.balanceOf(contractAddr);
-  //     generateEvent(
-  //       createEvent('BALANCES AFTER', [
-  //         destinationBalance.toString(),
-  //         contractBalance.toString(),
-  //       ]),
-  //     );
+  // operation 3 is validated by owners[1] & owners[2].
+  // now owners[1] will revoke it and we will try to execute it.
+  test('revoke operation', () => {
+    const initOperationListLength = bytesToSerializableObjectArray<Transaction>(
+      getTransactions([]),
+    ).unwrap().length;
 
-  //     // check that the transfer has not been done
-  //     expect(destinationBalance).toBe(initDestinationBalance);
-  //     expect(contractBalance).toBe(initContractBalance);
-  //   });
+    const initDestinationBalance = balanceOf(destination);
+    const initContractBalance = balanceOf(contractAddr);
 
-  //   // operation 3 is validated by owners[1] & owners[2].
-  //   // now owners[1] will revoke it and we will try to execute it.
-  //   test('revoke operation', () => {
-  //     let operationListLenght = bytesToSerializableObjectArray<Transaction>(
-  //       getTransactions([]),
-  //     ).unwrap().length;
+    // owners[1] revokes his approval on op 3. op 3 now has only 1 approval,
+    // which is below the required threshold.
+    switchUser(owners[1]);
+    revoke(new Args().add(u64(3)).serialize());
 
-  //     let destinationBalance = Coins.balanceOf(destination);
-  //     let contractBalance = Coins.balanceOf(contractAddr);
-  //     let initDestinationBalance = destinationBalance;
-  //     let initContractBalance = contractBalance;
+    // the approval threshold is no longer met, so execute must revert.
+    expect(() => {
+      execute(new Args().add(u64(3)).serialize());
+    }).toThrow();
 
-  //     switchUser(owners[1]);
-  //     expect(() => {
-  //       revoke(new Args().add(u64(3)).serialize());
-  //     }).not.toThrow();
+    // the operation list is untouched (nothing gets deleted)
+    const operationList = bytesToSerializableObjectArray<Transaction>(
+      getTransactions([]),
+    ).unwrap();
+    expect(operationList.length).toBe(initOperationListLength);
 
-  //     switchUser(deployerAddress);
-  //     generateEvent(
-  //       createEvent('BALANCES BEFORE', [
-  //         initDestinationBalance.toString(),
-  //         initContractBalance.toString(),
-  //       ]),
-  //     );
+    // op 3 is still present in storage, not executed, and the revocation
+    // reset its validation timestamp back to 0.
+    const operation = retrieveOperation(i32(3));
+    expect(operation.to).toBe(new Address(destination));
+    expect(operation.value).toBe(u64(15000));
+    expect(operation.executed).toBe(false);
+    expect(operation.timestamp).toBe(u64(0));
 
-  //     expect(() => {
-  //       execute(new Args().add(u64(3)).serialize());
-  //     }).toThrow();
-
-  //     // the operation should not have been deleted
-  //     let operationList = bytesToSerializableObjectArray<Transaction>(
-  //       getTransactions([]),
-  //     ).unwrap();
-  //     expect(operationList.length).toBe(operationListLenght);
-
-  //     // retrieve the operation in its current state in Storage
-  //     let operation = retrieveOperation(i32(3));
-
-  //     expect(operation.to).toBe(new Address(destination));
-  //     expect(operation.value).toBe(u64(15000));
-  //     expect(operation.executed).toBe(false);
-
-  //     destinationBalance = Coins.balanceOf(destination);
-  //     contractBalance = Coins.balanceOf(contractAddr);
-  //     generateEvent(
-  //       createEvent('BALANCES AFTER', [
-  //         destinationBalance.toString(),
-  //         contractBalance.toString(),
-  //       ]),
-  //     );
-
-  //     // check that the transfer has not been done
-  //     expect(destinationBalance).toBe(initDestinationBalance);
-  //     expect(contractBalance).toBe(initContractBalance);
-  //   });
+    // no funds moved
+    expect(balanceOf(destination)).toBe(initDestinationBalance);
+    expect(balanceOf(contractAddr)).toBe(initContractBalance);
+  });
 
   test('check operation list', () => {
     let operationList = bytesToSerializableObjectArray<Transaction>(
