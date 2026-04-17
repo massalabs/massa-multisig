@@ -39,11 +39,15 @@ export class Upgradeable {
   }
 
   /**
-   * @dev Returns true if the contract is locked
+   * @dev Returns true if the contract is still locked, i.e. the upgrade
+   * delay has not yet elapsed since the last proposal.
+   *
+   * The contract becomes unlocked (ready to upgrade) once
+   * `Context.timestamp() >= timelock + PERIOD`.
    */
   static islocked(): bool {
     return (
-      SafeMath.add(this.timelock(), bytesToU64(Storage.get(PERIOD))) <
+      SafeMath.add(this.timelock(), bytesToU64(Storage.get(PERIOD))) >
       Context.timestamp()
     );
   }
