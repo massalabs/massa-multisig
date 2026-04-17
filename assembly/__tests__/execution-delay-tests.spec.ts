@@ -167,7 +167,11 @@ describe('Zero-ms execution delay', () => {
     expect(storedTx.executed).toBe(true);
 
     // coins actually moved from the multisig to the destination
-    expect(balanceOf(destination)).toBe(destinationBalanceBefore + transferAmount);
-    expect(balanceOf(contractAddr)).toBe(contractBalanceBefore - transferAmount);
+    expect(balanceOf(destination)).toBe(
+      destinationBalanceBefore + transferAmount,
+    );
+    expect(balanceOf(contractAddr)).toBe(
+      contractBalanceBefore - transferAmount,
+    );
   });
 });
