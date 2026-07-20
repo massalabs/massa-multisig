@@ -337,10 +337,10 @@ export function upgrade(_: StaticArray<u8>): void {
  */
 export function getTransactions(bs: StaticArray<u8>): StaticArray<u8> {
   const args = new Args(bs);
-  const from = args.nextU64().isOk() ? args.nextU64().unwrap() : u64(0);
-  const to = args.nextU64().isOk()
-    ? args.nextU64().unwrap()
-    : TRANSACTIONS.size();
+  const fromRes = args.nextU64();
+  const from = fromRes.isOk() ? fromRes.unwrap() : u64(0);
+  const toRes = args.nextU64();
+  const to = toRes.isOk() ? toRes.unwrap() : TRANSACTIONS.size();
   const txs: Transaction[] = [];
 
   for (let i = from; i < to; i++) {
